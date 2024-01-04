@@ -16,7 +16,15 @@ class DecisionTree:
         self.max_depth = max_depth
         self.n_feats = n_feats  # no. of features to consider
         self.root = None
+    
+    def get_params(self, deep=True):
+        return {'min_samples_split': self.min_samples_split, 'max_depth': self.max_depth, 'n_feats': self.n_feats}
 
+    def set_params(self, **params):
+        for param, value in params.items():
+            setattr(self, param, value)
+        return self
+    
     def fit(self, X, y):
         self.n_feats = X.shape[1] if not self.n_feats else min(self.n_feats, X.shape[1])
         self.root = self._grow_tree(X, y)
@@ -108,12 +116,25 @@ class DecisionTree:
 
 ################################################# RANDOM FORESTS ##############################################
 class RandomForest:
-    def __init__(self, n_trees=10, max_depth=10, min_samples_split=2, n_feature=None):
+    def __init__(self, n_trees=10, max_depth=10, min_samples_split=2, n_features=None):
         self.n_trees = n_trees
         self.max_depth=max_depth
         self.min_samples_split=min_samples_split
-        self.n_features=n_feature
+        self.n_features=n_features
         self.trees = []
+
+    def get_params(self, deep=True):
+        return {
+            'n_trees': self.n_trees,
+            'max_depth': self.max_depth,
+            'min_samples_split': self.min_samples_split,
+            'n_features': self.n_features
+        }
+
+    def set_params(self, **params):
+        for param, value in params.items():
+            setattr(self, param, value)
+        return self
 
     def fit(self, X, y):
         self.trees = []
@@ -169,3 +190,134 @@ class KNN:
         # majority voye
         most_common = Counter(k_nearest_labels).most_common()
         return most_common[0][0]
+    
+
+#Clustering 
+    
+############################################## K_means #################################################
+
+def calc_distance(instance_1,instance_2,dist_type):
+    if(dist_type == 'euclidean'):
+        return np.sqrt(sum([(float(x)-float(y))**2 for x,y in zip(instance_1,instance_2)]))
+    elif(dist_type == 'manhattan'):
+        return sum([abs(float(x)-float(y)) for x,y in zip(instance_1,instance_2)])
+    elif(dist_type == 'minkowski'):
+        return pow(sum([pow(abs(float(x)-float(y)),3) for x,y in zip(instance_1,instance_2)]),1/3)
+    elif(dist_type=='cosine'):
+        return 1-(np.dot(instance_1,instance_2)/(np.sqrt(np.sum(np.power(instance_1,2)))*np.sqrt(np.sum(np.power(instance_2,2)))))
+
+def calculer_centroide(cluster):
+    moy=[attribut for attribut in cluster[0]]
+
+    for instance in cluster[1:]:
+        for i,attribut in enumerate(instance):
+            moy[i]+=attribut
+
+    moy=[elem/len(cluster) for elem in moy]
+    return moy
+
+def cluster_instance(instance,clusters):
+    distances=[]
+    for i, cluster in clusters.items():
+        centroid=clusters[i].get('centroid')
+        distances.append((i,calc_distance(instance,centroid,'minkowski')))
+
+    cluster = min(distances, key=lambda x: x[1])[0]
+    return cluster
+
+def check_non_equality(prec_centroids,new_centroids):
+    for i in range(len(prec_centroids)):
+        if(np.array_equal(prec_centroids[i],new_centroids[i])):
+            return False    
+    return True
+
+def K_means(dataset,K,nb_iteration):
+    data=dataset.copy()
+    centroids=[data.iloc[i].values for i in np.random.choice(len(data),K, replace=False)]
+
+    clusters={}
+    for i in range(K):
+        clusters[i]={'centroid':centroids[i],'instances':[]}
+
+    prec_centroids=[]
+    new_centroids=centroids
+    while(check_non_equality(prec_centroids,new_centroids) and nb_iteration>0):
+        prec_centroids=new_centroids
+        for instance in data.values:
+            cluster=cluster_instance(instance,clusters)
+            clusters[cluster].get('instances').append(instance)
+        new_centroids=[]
+        for i,cluster in clusters.items():
+            new_centroids.append(calculer_centroide(clusters[i].get('instances')))
+        nb_iteration-=1
+  
+    data['Cluster']=None
+    for i,cluster in clusters.items():
+        instances=clusters[i].get('instances')
+
+        for index,row in enumerate(data.iloc[:,:-1].values):
+            if any(np.array_equal(row, instance) for instance in instances):
+                data.at[index,'Cluster']=i
+    return data
+
+
+
+############################################## DBSCAN #################################################
+
+def epsilonVoisinage(data, point, eps):
+    voisinage=[]
+    for instance in data.values:
+        distance=calc_distance(point,instance,'euclidean')
+        print(distance)
+        if distance<=eps:
+            voisinage.append(instance)
+    return voisinage
+
+def etendreCluster(data, point, voisinage, C, eps, Minpts, visite,clusters):
+    if C not in clusters.keys():
+        clusters[C]=[]
+    clusters[C].append((point))
+    for ptsvois in voisinage:
+        exist=False 
+        if not any(np.array_equal(ptsvois, p) for p in visite):
+            visite.append(ptsvois)
+            vois=epsilonVoisinage(data,ptsvois,eps)
+            
+            if len(vois)>=Minpts:
+                voisinage.extend(vois)
+        for clusters_values in clusters.values():
+                if any(np.array_equal(ptsvois, p) for p in clusters_values):
+                    exist=True
+                    break
+        if (not exist):
+            clusters[C].append(ptsvois)
+
+
+def DBSCAN(data, eps, Minpts):
+    data=data.copy()
+    clusters={}
+    C=-1
+    visite=[]
+    Bruit=[]
+    for point in data.values:
+        if not any(np.array_equal(point, p) for p in visite):
+            visite.append(point)
+            voisinage=epsilonVoisinage(data, point, eps)
+
+            if len(voisinage)<Minpts:
+                Bruit.append(point)
+            else:
+                C+=1
+                etendreCluster(data, point, voisinage, C, eps, Minpts, visite,clusters)
+    data['Cluster']=None
+    
+
+    for index,row in enumerate(data.iloc[:,:-1].values):
+        for i,instances in clusters.items():
+            for instance in instances:
+                if np.array_equal(row, instance):
+                    data.at[index,'Cluster']=i
+        if any(np.array_equal(row, b) for b in Bruit):    
+            data.at[index,'Cluster']=-1
+    return data
+
