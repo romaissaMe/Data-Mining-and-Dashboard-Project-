@@ -1,5 +1,126 @@
 from collections import Counter
 import numpy as np
+from itertools import combinations
+from itertools import permutations
+
+
+################################################################################### APPRIORI ALGORITHM ##############################################################################
+
+from itertools import combinations
+
+def generate_CK(k,L):
+    if k==1:
+        CK = L
+        return CK
+    
+    items=[item for item, support in L]
+
+    if k==2:
+        CK = list(set(combinations(items, 2)))
+        return CK
+    
+    CK=[]
+    for i in range(len(items)-1):
+        for j in range(i+1,len(items)):
+            item=list(set(items[i]) | set(items[j]))
+            combins = list(set(combinations(item,k-1)))
+            c=True
+            if item not in CK:
+                for comb in combins:
+                    if comb not in items:
+                        c=False
+                        break
+                if c:
+                    CK.append(item)
+    return CK
+            
+    
+    
+def calculate_support(dataitems,Ck, k):
+    supports = [0] * len(Ck)
+    
+    if k == 1:
+        for i, item in enumerate(Ck):
+            for index, row in dataitems.iterrows():
+                if item in row['Items']:
+                    supports[i] += 1
+    else:
+        for i, item in enumerate(Ck):
+            for index, row in dataitems.iterrows():
+                if all(i in row['Items'] for i in item):
+                    supports[i] += 1
+    
+    
+    # Create a dictionary where keys are itemsets and values are the support counts
+    support_dict = {tuple(itemset): support for itemset, support in zip(Ck, supports)}
+    
+    return support_dict
+
+
+
+def generate_Lk(df,Ck,k, supp_min):
+    Lk = []
+    support = calculate_support(df,Ck,k)
+    for item, support in support.items():
+        if support >= supp_min:
+            Lk.append((item,support))
+    return Lk
+
+def apriori(df,supp_min):
+    all_items=[item for items in df['Items'].values for item in items]
+    Lk=list(set(all_items))
+
+    k=1
+    #supp_min=3
+    Ck=[]
+    frequent_pattern=[]
+    
+    while(Lk):
+        Ck=generate_CK(k,Lk)
+        Lk=generate_Lk(df,Ck,k,supp_min)
+        frequent_pattern+=[item for item in Lk]
+        k+=1
+    return frequent_pattern
+
+
+
+################################################################### ASSOCIATION RULES EXTRACTION ############################################################################
+def confiance(item1,item2,data):
+    P_A_B = 0
+    P_A = 0
+    for index, row in data.iterrows():
+        if all(i in row['Items'] for i in item1) and all(i in row['Items'] for i in item2):
+            P_A_B += 1
+        if all(i in row['Items'] for i in item1):
+            P_A += 1
+
+    return round((P_A_B / P_A),2) if P_A != 0 else 0
+
+def generate_association_rules(FP,conf_min,dataitems):
+    
+    frequent_2=[]
+    for itemset,support in FP:
+        if len(itemset) >= 2 and isinstance(itemset[0],tuple):
+            frequent_2.append((itemset,support))
+    #print(frequent_2)
+
+    association_rules = []
+
+    for itemset,support in frequent_2:
+        for r in range(1, len(itemset)):
+            for antecedent in combinations(itemset, r):
+                consequent = tuple(set(itemset) - set(antecedent))
+                conf=confiance(antecedent,consequent,dataitems)
+                if(conf>=conf_min):
+                    association_rules.append((set(antecedent), set(consequent),support,conf))
+
+    return association_rules
+
+
+
+
+################################################# DECISON TREE ####################################################
+
 class Node:
     def __init__(self, feature=None, threshold=None, left=None, right=None, *, value=None):
         self.feature = feature
@@ -169,3 +290,133 @@ class KNN:
         # majority voye
         most_common = Counter(k_nearest_labels).most_common()
         return most_common[0][0]
+    
+#Clustering 
+    
+############################################## K_means #################################################
+
+def calc_distance(instance_1,instance_2,dist_type):
+    if(dist_type == 'euclidean'):
+        return np.sqrt(sum([(float(x)-float(y))**2 for x,y in zip(instance_1,instance_2)]))
+    elif(dist_type == 'manhattan'):
+        return sum([abs(float(x)-float(y)) for x,y in zip(instance_1,instance_2)])
+    elif(dist_type == 'minkowski'):
+        return pow(sum([pow(abs(float(x)-float(y)),3) for x,y in zip(instance_1,instance_2)]),1/3)
+    elif(dist_type=='cosine'):
+        return 1-(np.dot(instance_1,instance_2)/(np.sqrt(np.sum(np.power(instance_1,2)))*np.sqrt(np.sum(np.power(instance_2,2)))))
+
+def calculer_centroide(cluster):
+    moy=[attribut for attribut in cluster[0]]
+
+    for instance in cluster[1:]:
+        for i,attribut in enumerate(instance):
+            moy[i]+=attribut
+
+    moy=[elem/len(cluster) for elem in moy]
+    return moy
+
+def cluster_instance(instance,clusters):
+    distances=[]
+    for i, cluster in clusters.items():
+        centroid=clusters[i].get('centroid')
+        distances.append((i,calc_distance(instance,centroid,'minkowski')))
+
+    cluster = min(distances, key=lambda x: x[1])[0]
+    return cluster
+
+def check_non_equality(prec_centroids,new_centroids):
+    for i in range(len(prec_centroids)):
+        if(np.array_equal(prec_centroids[i],new_centroids[i])):
+            return False    
+    return True
+
+def K_means(dataset,K,nb_iteration):
+    data=dataset.copy()
+    centroids=[data.iloc[i].values for i in np.random.choice(len(data),K, replace=False)]
+
+    clusters={}
+    for i in range(K):
+        clusters[i]={'centroid':centroids[i],'instances':[]}
+
+    prec_centroids=[]
+    new_centroids=centroids
+    while(check_non_equality(prec_centroids,new_centroids) and nb_iteration>0):
+        prec_centroids=new_centroids
+        for instance in data.values:
+            cluster=cluster_instance(instance,clusters)
+            clusters[cluster].get('instances').append(instance)
+        new_centroids=[]
+        for i,cluster in clusters.items():
+            new_centroids.append(calculer_centroide(clusters[i].get('instances')))
+        nb_iteration-=1
+  
+    data['Cluster']=None
+    for i,cluster in clusters.items():
+        instances=clusters[i].get('instances')
+
+        for index,row in enumerate(data.iloc[:,:-1].values):
+            if any(np.array_equal(row, instance) for instance in instances):
+                data.at[index,'Cluster']=i
+    return data
+
+
+
+############################################## DBSCAN #################################################
+
+def epsilonVoisinage(data, point, eps):
+    voisinage=[]
+    for instance in data.values:
+        distance=calc_distance(point,instance,'euclidean')
+        print(distance)
+        if distance<=eps:
+            voisinage.append(instance)
+    return voisinage
+
+def etendreCluster(data, point, voisinage, C, eps, Minpts, visite,clusters):
+    if C not in clusters.keys():
+        clusters[C]=[]
+    clusters[C].append((point))
+    for ptsvois in voisinage:
+        exist=False 
+        if not any(np.array_equal(ptsvois, p) for p in visite):
+            visite.append(ptsvois)
+            vois=epsilonVoisinage(data,ptsvois,eps)
+            
+            if len(vois)>=Minpts:
+                voisinage.extend(vois)
+        for clusters_values in clusters.values():
+                if any(np.array_equal(ptsvois, p) for p in clusters_values):
+                    exist=True
+                    break
+        if (not exist):
+            clusters[C].append(ptsvois)
+
+
+def DBSCAN(data, eps, Minpts):
+    data=data.copy()
+    clusters={}
+    C=-1
+    visite=[]
+    Bruit=[]
+    for point in data.values:
+        if not any(np.array_equal(point, p) for p in visite):
+            visite.append(point)
+            voisinage=epsilonVoisinage(data, point, eps)
+
+            if len(voisinage)<Minpts:
+                Bruit.append(point)
+            else:
+                C+=1
+                etendreCluster(data, point, voisinage, C, eps, Minpts, visite,clusters)
+    data['Cluster']=None
+    
+
+    for index,row in enumerate(data.iloc[:,:-1].values):
+        for i,instances in clusters.items():
+            for instance in instances:
+                if np.array_equal(row, instance):
+                    data.at[index,'Cluster']=i
+        if any(np.array_equal(row, b) for b in Bruit):    
+            data.at[index,'Cluster']=-1
+    return data
+
