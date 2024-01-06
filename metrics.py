@@ -182,3 +182,59 @@ def calculate_silhouette(data):
     Silhouette/=len(labels)
 
     return S_avg,Silhouette
+
+
+from sklearn.metrics.pairwise import euclidean_distances
+# using the maximal distance in a cluster
+def intra_cluster(data,cluster):
+    # Get the cluster labels assigned to the data points
+    labels = cluster.labels_
+
+    # Get the unique cluster labels
+    unique_labels = np.unique(labels)
+    # Calculate the intra-cluster distances
+    
+    intra_cluster_distances = []
+    for label in unique_labels:
+        # Get the indices of the data points in the current cluster
+        indices = np.where(labels == label)[0]
+        # Get the data points in the current cluster
+        cluster_data = [data.iloc[indice,:] for indice in indices]
+        # Calculate the pairwise distances between the data points in the current cluster
+        distances = euclidean_distances(cluster_data)
+        # Calculate the sum of the pairwise distances
+        max_distances = np.max(distances)
+        # Calculate the intra-cluster distance for the current cluster
+        intra_cluster_distance = max_distances
+        # Add the intra-cluster distance to the list
+        intra_cluster_distances.append(intra_cluster_distance)
+
+    # Calculate the average intra-cluster distance
+    min_intra_cluster_distance = np.min(intra_cluster_distances)
+    return min_intra_cluster_distance # the minimum between maximums
+
+from sklearn.metrics.pairwise import euclidean_distances
+from sklearn.metrics import pairwise_distances
+# Using the distance between the mean of clusters
+def inter_cluster(data,cluster):   
+    # Get the cluster labels assigned to the data points
+    labels = cluster.labels_
+
+    # Get the unique cluster labels
+    unique_labels = np.unique(labels)
+
+    # Get the cluster centroids
+    centroids = np.array([np.mean(data[labels == label], axis=0) for label in unique_labels])
+
+    # Calculate the inter-cluster distances
+    inter_cluster_distances = []
+    for i, label_i in enumerate(unique_labels):
+        for j, label_j in enumerate(unique_labels):
+            if i < j:
+                # Calculate the pairwise distances between centroids of different clusters
+                distances = pairwise_distances([centroids[i]], [centroids[j]], metric='euclidean')
+                inter_cluster_distances.append(distances[0][0])
+
+    # Calculate the average inter-cluster distance
+    average_inter_cluster_distance = np.mean(inter_cluster_distances)
+    return average_inter_cluster_distance

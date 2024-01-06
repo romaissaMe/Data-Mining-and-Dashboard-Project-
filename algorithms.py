@@ -3,6 +3,7 @@ import numpy as np
 from itertools import combinations
 from itertools import permutations
 from sklearn.model_selection import train_test_split
+import pandas as pd
 import random
 
 ################################################################################### APPRIORI ALGORITHM ##############################################################################
@@ -509,3 +510,20 @@ def split_train_test(data):
     y_test= np.concatenate([class_splits[label]['y_test'] for label in unique_classes], axis=0)
 
     return X_train, X_test, y_train, y_test
+
+from sklearn.decomposition import PCA
+def data_to_data_2d(data):
+    # Extract the features from your dataset
+    features = data.iloc[:, :].values  # Exclude the target variable
+
+    # Standardize the features (optional but recommended for PCA)
+    from sklearn.preprocessing import StandardScaler
+    features_standardized = StandardScaler().fit_transform(features)
+
+    # Apply PCA to reduce the features to 2 components
+    pca = PCA(n_components=2)
+    features_2d = pca.fit_transform(features_standardized)
+
+    # Create a new DataFrame with the reduced features
+    data_2d = pd.DataFrame(data=features_2d, columns=['PC1', 'PC2'])
+    return data_2d
