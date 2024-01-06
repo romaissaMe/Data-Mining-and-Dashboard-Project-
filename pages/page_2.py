@@ -15,9 +15,9 @@ data= pd.read_csv("./new_dataset_2.csv")
 data['Start date']= pd.to_datetime(data['Start date'])
 data['end date']= pd.to_datetime(data['end date'])
 attribute_dropdown = dcc.Dropdown(id='attribute-dropdown', className='attributes-dropdown',options=list(["case count","test count","positive tests","case rate","test rate","positivity rate"]),value='case count',style={'width':'150px'})
-zone_dropdown = dcc.Dropdown(id='zone-dropdown', className='attributes-dropdown',options=list(data['zcta'].unique()),value=94087)
-season_dropdown = dcc.Dropdown(id='season-dropdown',className='attributes-dropdown',options=list(['monthly','weekly','yearly']),value='monthly')
-period_dropdown = dcc.Dropdown(id='period-dropdown', className='attributes-dropdown',options=list(data['time_period'].unique()),value=26)
+zone_dropdown = dcc.Dropdown(id='zone-dropdown', className='attributes-dropdown mb-1',options=list(data['zcta'].unique()),value=94087)
+season_dropdown = dcc.Dropdown(id='season-dropdown',className='attributes-dropdown  mb-1',options=list(['monthly','weekly','yearly']),value='monthly')
+period_dropdown = dcc.Dropdown(id='period-dropdown', className='attributes-dropdown  mb-1',options=list(data['time_period'].unique()),value=26)
 ################################################## UTILITY FUNCTIONS #####################################################################
 def global_line_chart(data=data,attribute='case count'):
     grouped_data = data.groupby('time_period')[attribute].sum().reset_index()
@@ -164,20 +164,20 @@ layout= dbc.Container([
                            style={'height': '100%', 'width': '100%'})],width=5),
         dbc.Col([dcc.Graph(id='line-chart-per-zone',figure=line_chart_per_zone())]),   
                            
-            ],className='h-25'),
+            ],className='h-25 mb-1'),
 
     dbc.Row([
         season_dropdown,
         dbc.Col([dcc.Graph(figure=seasonal_traces_per_zone(),id='seasonal-traces-per-zone')]),
-    ]),
+    ],className='mb-1'),
     dbc.Row([
         dbc.Col([dcc.Graph(figure=heatmap_zone(),id='heatmap-zone')]),
         dbc.Col([dcc.Graph(figure=distribution_year_per_zone(),id='distribution-year-per-zone')]),
         dbc.Col([dcc.Graph(id='top-zones-bar-plot',figure=top_zones_bar_plot())]),
-    ]),
+    ],className='mb-1'),
     dbc.Row([
         dbc.Col([dcc.Graph(figure=population_test_heatmap(),id='population-test-heatmap')],width=4),
-        dbc.Col([period_dropdown,dcc.Graph(figure=case_test_pos_test_relationship_per_period(),id='case-test-pos-test-relationship-per-period')])
+        dbc.Col([period_dropdown,dcc.Graph(figure=case_test_pos_test_relationship_per_period(),id='case-test-pos-test-relationship-per-period',className='mt-1'),])
        
     ])
         

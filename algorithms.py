@@ -2,7 +2,8 @@ from collections import Counter
 import numpy as np
 from itertools import combinations
 from itertools import permutations
-
+from sklearn.model_selection import train_test_split
+import random
 
 ################################################################################### APPRIORI ALGORITHM ##############################################################################
 
@@ -116,6 +117,15 @@ def generate_association_rules(FP,conf_min,dataitems):
 
     return association_rules
 
+def recommandation_soil(observation,data):
+    recommandations=[]
+    for index, row in data.iterrows():
+        if observation in row['Items']:
+            recommandations.append(row['Transaction'])
+        if len(recommandations)>0:
+            return random.choice(list(set(recommandations)))
+        else :
+            return "No recommandation"
 
 
 
@@ -137,7 +147,15 @@ class DecisionTree:
         self.max_depth = max_depth
         self.n_feats = n_feats  # no. of features to consider
         self.root = None
+    
+    def get_params(self, deep=True):
+        return {'min_samples_split': self.min_samples_split, 'max_depth': self.max_depth, 'n_feats': self.n_feats}
 
+    def set_params(self, **params):
+        for param, value in params.items():
+            setattr(self, param, value)
+        return self
+    
     def fit(self, X, y):
         self.n_feats = X.shape[1] if not self.n_feats else min(self.n_feats, X.shape[1])
         self.root = self._grow_tree(X, y)
@@ -229,12 +247,25 @@ class DecisionTree:
 
 ################################################# RANDOM FORESTS ##############################################
 class RandomForest:
-    def __init__(self, n_trees=10, max_depth=10, min_samples_split=2, n_feature=None):
+    def __init__(self, n_trees=10, max_depth=10, min_samples_split=2, n_features=None):
         self.n_trees = n_trees
         self.max_depth=max_depth
         self.min_samples_split=min_samples_split
-        self.n_features=n_feature
+        self.n_features=n_features
         self.trees = []
+
+    def get_params(self, deep=True):
+        return {
+            'n_trees': self.n_trees,
+            'max_depth': self.max_depth,
+            'min_samples_split': self.min_samples_split,
+            'n_features': self.n_features
+        }
+
+    def set_params(self, **params):
+        for param, value in params.items():
+            setattr(self, param, value)
+        return self
 
     def fit(self, X, y):
         self.trees = []
@@ -268,8 +299,9 @@ def euclidean_distance(x1, x2):
     return distance
 
 class KNN:
-    def __init__(self, k=3):
+    def __init__(self, k=3,dist_type='euclidean'):
         self.k = k
+        self.dist_type= dist_type
 
     def fit(self, X, y):
         self.X_train = X
@@ -281,7 +313,7 @@ class KNN:
 
     def _predict(self, x):
         # compute the distance
-        distances = [euclidean_distance(x, x_train) for x_train in self.X_train]
+        distances = [calc_distance(x, x_train,self.dist_type) for x_train in self.X_train]
     
         # get the closest k
         k_indices = np.argsort(distances)[:self.k]
@@ -304,119 +336,176 @@ def calc_distance(instance_1,instance_2,dist_type):
         return pow(sum([pow(abs(float(x)-float(y)),3) for x,y in zip(instance_1,instance_2)]),1/3)
     elif(dist_type=='cosine'):
         return 1-(np.dot(instance_1,instance_2)/(np.sqrt(np.sum(np.power(instance_1,2)))*np.sqrt(np.sum(np.power(instance_2,2)))))
+class K_means:
+    def __init__(self,K=2,nb_iterations=10,dist_type='minkowski'):
+        self.K=K
+        self.nb_iterations=nb_iterations
+        self.distance= dist_type
+        self.labels_=[]
+        self.centroids_=[]
+    def calculer_centroide(self,cluster):
+        moy=[attribut for attribut in cluster[0]]
 
-def calculer_centroide(cluster):
-    moy=[attribut for attribut in cluster[0]]
+        for instance in cluster[1:]:
+            for i,attribut in enumerate(instance):
+                moy[i]+=attribut
 
-    for instance in cluster[1:]:
-        for i,attribut in enumerate(instance):
-            moy[i]+=attribut
+        moy=[elem/len(cluster) for elem in moy]
+        return moy
 
-    moy=[elem/len(cluster) for elem in moy]
-    return moy
+    def cluster_instance(self,instance,clusters):
+        distances=[]
+        for i, cluster in clusters.items():
+            centroid=clusters[i].get('centroid')
+            distances.append((i,calc_distance(instance,centroid,self.distance)))
 
-def cluster_instance(instance,clusters):
-    distances=[]
-    for i, cluster in clusters.items():
-        centroid=clusters[i].get('centroid')
-        distances.append((i,calc_distance(instance,centroid,'minkowski')))
+        cluster = min(distances, key=lambda x: x[1])[0]
+        return cluster
 
-    cluster = min(distances, key=lambda x: x[1])[0]
-    return cluster
+    def check_non_equality(self,prec_centroids):
+        for i in range(len(prec_centroids)):
+            if(np.array_equal(prec_centroids[i],self.centroids_[i])):
+                return False    
+        return True
 
-def check_non_equality(prec_centroids,new_centroids):
-    for i in range(len(prec_centroids)):
-        if(np.array_equal(prec_centroids[i],new_centroids[i])):
-            return False    
-    return True
+    def fit(self,dataset):
+        data=dataset.copy()
+        self.centroids_=[data.iloc[i].values for i in np.random.choice(len(data),self.K, replace=False)]
 
-def K_means(dataset,K,nb_iteration):
-    data=dataset.copy()
-    centroids=[data.iloc[i].values for i in np.random.choice(len(data),K, replace=False)]
+        clusters={}
+        for i in range(self.K):
+            clusters[i]={'centroid':self.centroids_[i],'instances':[]}
 
-    clusters={}
-    for i in range(K):
-        clusters[i]={'centroid':centroids[i],'instances':[]}
+        prec_centroids=[]
+        #new_centroids=self.centroids
+        while(self.check_non_equality(prec_centroids) and self.nb_iterations>0):
+            prec_centroids=self.centroids_
+            for instance in data.values:
+                cluster=self.cluster_instance(instance,clusters)
+                clusters[cluster].get('instances').append(instance)
+            self.centroids_=[0]*self.K
+            for i,cluster in clusters.items():
+                self.centroids_[i]=(self.calculer_centroide(clusters[i].get('instances')))
+            self.nb_iterations-=1
 
-    prec_centroids=[]
-    new_centroids=centroids
-    while(check_non_equality(prec_centroids,new_centroids) and nb_iteration>0):
-        prec_centroids=new_centroids
-        for instance in data.values:
-            cluster=cluster_instance(instance,clusters)
-            clusters[cluster].get('instances').append(instance)
-        new_centroids=[]
+        self.labels_=[None]*len(data)
+        data['Cluster']=None
         for i,cluster in clusters.items():
-            new_centroids.append(calculer_centroide(clusters[i].get('instances')))
-        nb_iteration-=1
-  
-    data['Cluster']=None
-    for i,cluster in clusters.items():
-        instances=clusters[i].get('instances')
+            instances=clusters[i].get('instances')
 
-        for index,row in enumerate(data.iloc[:,:-1].values):
-            if any(np.array_equal(row, instance) for instance in instances):
-                data.at[index,'Cluster']=i
-    return data
-
+            for index,row in enumerate(data.iloc[:,:-1].values):
+                if any(np.array_equal(row, instance) for instance in instances):
+                    data.at[index,'Cluster']=i
+                    self.labels_[index]=i
+        return data
 
 
 ############################################## DBSCAN #################################################
 
-def epsilonVoisinage(data, point, eps):
-    voisinage=[]
-    for instance in data.values:
-        distance=calc_distance(point,instance,'euclidean')
-        print(distance)
-        if distance<=eps:
-            voisinage.append(instance)
-    return voisinage
 
-def etendreCluster(data, point, voisinage, C, eps, Minpts, visite,clusters):
-    if C not in clusters.keys():
-        clusters[C]=[]
-    clusters[C].append((point))
-    for ptsvois in voisinage:
-        exist=False 
-        if not any(np.array_equal(ptsvois, p) for p in visite):
-            visite.append(ptsvois)
-            vois=epsilonVoisinage(data,ptsvois,eps)
-            
-            if len(vois)>=Minpts:
-                voisinage.extend(vois)
-        for clusters_values in clusters.values():
-                if any(np.array_equal(ptsvois, p) for p in clusters_values):
-                    exist=True
-                    break
-        if (not exist):
-            clusters[C].append(ptsvois)
+class DBSCAN:   
+    def __init__(self, eps=0.5, Minpts=5):
+        self.eps = eps
+        self.Minpts = Minpts
+        self.labels_ = []
+        self.distances_=[]
+
+    def get_params(self, deep=True):
+        return {
+            'eps': self.eps,
+            'Minpts': self.Minpts,
+        }
+
+    def set_params(self, **params):
+        for param, value in params.items():
+            setattr(self, param, value)
+        return self
+
+    def epsilonVoisinage(self,data, point, eps):
+        voisinage=[]
+        for instance in data.values:
+            distance=calc_distance(point,instance,'euclidean')
+            if distance !=0:
+                self.distances_.append(distance)
+            if distance<=eps:
+                voisinage.append(instance)
+        return voisinage
+
+    def etendreCluster(self,data, point, voisinage, C, eps, Minpts, visite,clusters):
+        if C not in clusters.keys():
+            clusters[C]=[]
+        clusters[C].append((point))
+        for ptsvois in voisinage:
+            exist=False 
+            if not any(np.array_equal(ptsvois, p) for p in visite):
+                visite.append(ptsvois)
+                vois=self.epsilonVoisinage(data,ptsvois,eps)
+
+                if len(vois)>=Minpts:
+                    voisinage.extend(vois)
+            for clusters_values in clusters.values():
+                    if any(np.array_equal(ptsvois, p) for p in clusters_values):
+                        exist=True
+                        break
+            if (not exist):
+                clusters[C].append(ptsvois)
 
 
-def DBSCAN(data, eps, Minpts):
-    data=data.copy()
-    clusters={}
-    C=-1
-    visite=[]
-    Bruit=[]
-    for point in data.values:
-        if not any(np.array_equal(point, p) for p in visite):
-            visite.append(point)
-            voisinage=epsilonVoisinage(data, point, eps)
+    def fit(self,data):
+        data=data.copy()
+        clusters={}
+        C=-1
+        visite=[]
+        Bruit=[]
+        for point in data.values:
+            if not any(np.array_equal(point, p) for p in visite):
+                visite.append(point)
+                voisinage=self.epsilonVoisinage(data, point, self.eps)
 
-            if len(voisinage)<Minpts:
-                Bruit.append(point)
-            else:
-                C+=1
-                etendreCluster(data, point, voisinage, C, eps, Minpts, visite,clusters)
-    data['Cluster']=None
+                if len(voisinage)<self.Minpts:
+                    Bruit.append(point)
+                else:
+                    C+=1
+                    self.etendreCluster(data, point, voisinage, C, self.eps, self.Minpts, visite,clusters)
+        data['Cluster']=None
+        self.labels_=[None]*len(data)
+
+        for index,row in enumerate(data.iloc[:,:-1].values):
+            for i,instances in clusters.items():
+                for instance in instances:
+                    if np.array_equal(row, instance):
+                        data.at[index,'Cluster']=i
+                        self.labels_[index]=i
+                        
+            if any(np.array_equal(row, b) for b in Bruit):    
+                data.at[index,'Cluster']=-1
+                self.labels_[index]=-1
+        return data
     
 
-    for index,row in enumerate(data.iloc[:,:-1].values):
-        for i,instances in clusters.items():
-            for instance in instances:
-                if np.array_equal(row, instance):
-                    data.at[index,'Cluster']=i
-        if any(np.array_equal(row, b) for b in Bruit):    
-            data.at[index,'Cluster']=-1
-    return data
+#########################################" Utility Functions ##############################################
+def split_train_test(data):
+    # List of unique class labels
+    unique_classes = data['Fertility'].unique()
 
+    # Dictionary to store train and test sets for each class
+    class_splits = {}
+
+    # Loop through each class
+    for class_label in unique_classes:
+        # Extract rows corresponding to the current class
+        class_data = data[data['Fertility'] == class_label]
+
+        # Split the class data_discretise into train and test sets
+        X, y = class_data.iloc[:, 1:].values, class_data.iloc[:, 0].values
+        X_train_class, X_test_class, y_train_class, y_test_class = train_test_split(X, y, test_size=0.2, random_state=42)
+
+        # Store the splits in the dictionary
+        class_splits[class_label] = {'X_train': X_train_class, 'X_test': X_test_class, 'y_train': y_train_class, 'y_test': y_test_class}
+    # Concatenate the train and test sets 
+    X_train = np.concatenate([class_splits[label]['X_train'] for label in unique_classes], axis=0)
+    X_test = np.concatenate([class_splits[label]['X_test'] for label in unique_classes], axis=0)
+    y_train= np.concatenate([class_splits[label]['y_train'] for label in unique_classes], axis=0)
+    y_test= np.concatenate([class_splits[label]['y_test'] for label in unique_classes], axis=0)
+
+    return X_train, X_test, y_train, y_test

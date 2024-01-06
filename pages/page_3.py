@@ -12,7 +12,7 @@ import dash_ag_grid as dag
 import math
 import random
 import ast
-from algorithms import apriori, generate_association_rules
+from algorithms import apriori, generate_association_rules, recommandation_soil
 
 dash.register_page(__name__, path='/Frequent_Pattern_Mining',name='Frequent Patterns Mining')
 data= pd.read_csv("./Dataset2.csv")
@@ -35,9 +35,7 @@ def nb_FP_per_Support(data=transactional_data, support=7):
     fig = px.line(x=support_levels, y=num_patterns, title="Number of Frequent Patterns for Different Support Levels") 
     return fig
 
-def display_FP(data = transactional_data, support = 8):
-    FP = apriori(data, support)
-    return FP
+
 
 def AR_per_confiance_level(dataitems=transactional_data):
     FP = apriori(dataitems,3)
@@ -52,13 +50,21 @@ def AR_per_confiance_level(dataitems=transactional_data):
     fig = px.line(x=confiance_levels, y=num_rules, title="Number of Association Rules for Different Confiance Levels")
     fig.update_layout(xaxis_title="Confiance Levels", yaxis_title="Number of Association Rules")
     return fig
+
+def display_FP(data = transactional_data, support = 3):
+    FP = apriori(data, support)
+    return FP
   
 def afficher_association_rules(association_rules):
     printed_association_rules = []
     for rule in association_rules:
         item1,item2,support,confiance=rule
         printed_association_rules.append(f"{item1} -> {item2} ({support},{confiance})")
-    return printed_association_rules
+    return html.Div(
+        [
+            html.Ul([html.Li(printed_association_rules[i]) for i in range(len(printed_association_rules))]),
+        ], className="scrollable-div"
+    )
 
 def display_lift_metric(association_rules, dataitems):
     forte_rules=[]
@@ -150,18 +156,34 @@ def display_kulczynski_metric(association_rules, dataitems):
     forte_rules=[(rule,kulczynski) for rule,kulczynski in forte_rules if kulczynski==max_kulczynski]
     return forte_rules
 
-def recommandation_soil(observation,data):
-    recommandations=[]
-    for index, row in data.iterrows():
-        if observation in row['Items']:
-            recommandations.append(row['Transaction'])
-    return random.choice(list(set(recommandations)))
+def FP(data=transactional_data, support=3, metric_type="",confidance_threshold= 0.7):
+    FP = display_FP(data, support)
+    FFP = generate_association_rules(FP, confidance_threshold, data)
+    if metric_type == "":
+        return afficher_association_rules(FFP)
+    elif metric_type == "lift":
+        FA= display_lift_metric(FFP, data)
+        return afficher_association_rules(FA)
+    elif metric_type == "cosine":
+        FA= display_cosine_metric(FFP, data)
+        return afficher_association_rules(FA)
+    elif metric_type == "jaccard":
+        FA= display_jaccard_metric(FFP, data)
+        return afficher_association_rules(FA)
+    elif metric_type == "kulczynski":
+        FA= display_kulczynski_metric(FFP, data)
+        return afficher_association_rules(FA)
+
+def display_recommanded_soil(data=transactional_data,observation = (2.0, 3.0, 2.0, 'Coconut', 'DAP')):
+    result = recommandation_soil(observation,data)
+    return result
+   
 
 ############################################################ Layout Components ####################################################################
 metrics_checklist = html.Div(
     [
         dbc.Label("Select Metric"),
-        dbc.Checklist(
+        dcc.Dropdown(
             id="metrics",
             options=[
                 {"label": "Confidance", "value": "confidance"},
@@ -170,11 +192,11 @@ metrics_checklist = html.Div(
                 {"label": "Jaccard", "value": "jaccard"},
                 {"label": "Kulczynski", "value": "kulczynski"},
             ],
-            value=["confidance"],
-            inline=True,
+            value="confidance",
+           className="text-primary",
         ),
+        
     ],
-    className="mb-4",
 )
 
 support_slider = html.Div(
@@ -191,8 +213,22 @@ support_slider = html.Div(
         )
     ]
 )
+confidance_slider = html.Div(
+    [
+        dbc.Label("Minimum Confidance"),
+        dcc.Slider(
+            id= "confidance",
+            min=0,
+            max=1,
+            step=0.1,
+            value=0.5,
+            marks=None,
+            tooltip={"placement": "bottom", "always_visible": True},
+        )
+    ]
+)
 controls = dbc.Card(
-    [support_slider, metrics_checklist],
+    [support_slider, confidance_slider, metrics_checklist],
     body=True,
 )
 
@@ -202,9 +238,57 @@ transactional_data_grid = dag.AgGrid(
     rowData=transactional_data.to_dict("records"),
     defaultColDef={"flex": 1, "minWidth": 120, "sortable": True, "resizable": True, "filter": True},
     dashGridOptions={"rowSelection":"multiple"},
+    columnSize="sizeToFit",
 )
 
+temperature_input = dbc.Input(
+    type="number",
+    id="temperature",
+    placeholder=2.0,
+    min=10,
+    max=30,
+    className="me-1"
 
+)
+humidity_input = dbc.Input(
+    type="float",
+    id="humidity",
+    placeholder=3.0,
+    min=float(10),
+    max=float(30),
+    className="me-1"
+)
+rainfall_input = dbc.Input(
+    type="number",
+    id="rainfall",
+    placeholder=2.0,
+    min=10.0,
+    max=30.0,
+)
+crop_input = dcc.Dropdown(
+   options=["Coconut","DAP"],
+   id="crop",
+   value="Coconut",
+   clearable=False,
+   className="mb-2"
+)
+fertilizer_input = dcc.Dropdown(
+   options=["DAP","Urea","MOP","Good NPK"],
+   id = "fertilizer",
+   value="DAP",
+   clearable=False,
+   className="mb-2"
+)
+
+recommandation_btn = dbc.Button("Search", id="recommandation-btn")
+attributes_1 = html.Div(
+    [
+       temperature_input,humidity_input,rainfall_input, 
+    ],
+    className="mb-2 d-flex justify-content-between",
+)
+
+recommandation_options = dbc.Card([attributes_1,crop_input,fertilizer_input,recommandation_btn],className="p-2")
 ################################################################ Page Layout ################################################################
 
 layout= dbc.Container([
@@ -212,6 +296,11 @@ layout= dbc.Container([
     html.H4("Association Rules"),
     html.Hr(className="mt-1"),
     dbc.Row([
+        dbc.Col(
+            [
+            transactional_data_grid
+            ]
+        ),
         dbc.Col(
             [
                 dcc.Graph(id='nb-FP-support',figure=nb_FP_per_Support())
@@ -222,26 +311,45 @@ layout= dbc.Container([
                 dcc.Graph(id='AR-confiance',figure=AR_per_confiance_level())
             ]
         ),
-        dbc.Col(
-            [
-            transactional_data_grid
-            ]
-        )
-    ]),
+        
+    ],className="mb-3"),
     dbc.Row([
         dbc.Col(
-            [
-               controls 
+            [   
+               controls, 
             ],
             width=4
-        )
-    ])
-        
-],fluid=True,
-    className="dbc dbc-ag-grid",)
+        ),
+      dbc.Col(children=[html.H5("FP Space"),FP()],id="FP-space")
+    ]),
+    
+    dbc.Row([dbc.Col([html.H5("Try The Recommandation System"),recommandation_options],width=4),
+             dbc.Col([
+                 dbc.CardHeader("Recommandation Result"),
+                 dbc.CardBody([
+                      display_recommanded_soil()
+                 ],id="recommandation-soil",)
+             ])
+             ],
+            )],
+    fluid=True,
+    className="dbc dbc-ag-grid")
 
 
 ##################################################### Callbacks ##################################################################################################
+@callback(
+    Output("FP-spce","children"),
+    [Input("support","value"),Input("metrics","value"),Input("confidance","value"),]
+)
+def update_FP(selected_support,selected_metric,selected_confidanse):
+    return FP(transactional_data,selected_support,selected_metric,selected_confidanse)
 
-
-
+@callback(
+    Output("recommandation-soil","children"),
+    Input("recommandation-btn","n_clicks"),
+    [State("temperature","value"),State("humidity","value"),State("rainfall","value"),State("crop","value"),
+     State("fertilizer","value")]
+)
+def update_recommandation(n_clicks,slected_temperature,selected_humidity,selected_rainfall,selected_crop,selected_fertilizer):
+    observation = (slected_temperature,selected_humidity,selected_rainfall,selected_crop,selected_fertilizer)
+    return display_recommanded_soil(transactional_data,observation)

@@ -1,0 +1,104 @@
+/* style.css */
+
+.database-dropdown {
+    width: 200px;
+    height: 30px;
+    font-size: 14px;
+  }
+
+.attributes-dropdown{
+    width: 100px;
+    height: 30px;
+    font-size: 14px;
+  }
+
+.attributes-dropdown-md{
+    width: 200px;
+    height: 50px;
+    font-size: 14px;
+    margin-top: 1px;
+  }
+.card-header-custom{
+  height: 30px;
+  padding-top:2px
+}  
+.graphs-wrapper-1{
+  display: flex;
+  flex-direction: row;
+  gap: 1px;
+  max-height: 350px;
+  margin-top: 0.5rem;
+}
+.graphs-wrapper-2{
+  display: flex;
+  flex-direction: row;
+  gap: 1px;
+  height: 250px;
+  justify-content: center;
+  margin-top: 0.5rem;
+}
+.graphs-wrapper-3{
+  display: flex;
+  flex-direction: row;
+  gap: 1px;
+  height: 300px;
+  margin-top: 0px;
+  padding: 0px;
+}
+.main-container{
+  padding: 0px;
+  margin: 0px;
+  height: 100vh;
+  overflow-y: scroll;
+}
+.page-container{
+  height: 100%;
+  width: 100%;
+  padding: 4px 15px 4px 15px;
+}
+
+.kpi-card
+{
+  overflow: hidden;
+  position: relative;
+  box-shadow: 1px 1px 3px rgba(0,0,0,0.75);;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5em;
+  border-radius: 0.3em;
+  font-family: sans-serif;  
+  width: 150px;
+  min-width: 150px;
+  height: 40px;
+  min-height: 30px;
+  font-weight: bolder;
+  font-size: 14px;
+  color:cadetblue;
+}
+
+.purple
+{
+  background: #886ab5;
+  color: #fff;
+}
+.graph-style{
+  height: 100%;
+  width: 100%;
+}
+.card-body-custom{
+  padding: 0px;
+}
+
+.scrollable-div {
+  height: 300px; /* Set the desired height */
+  overflow-y: auto; /* Enable vertical scrollbar */
+  border: 1px solid #ccc; /* Optional: Add border for visibility */
+  padding: 10px; /* Optional: Add padding */
+}
+  @media screen and (max-width: 600px) {
+    .graphs-wrapper-1,.graphs-wrapper-2,.graphs-wrapper-3 {
+      flex-direction: column;
+      height: auto;
+    }
+  }
