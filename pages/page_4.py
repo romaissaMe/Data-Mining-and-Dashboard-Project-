@@ -1,5 +1,6 @@
 import dash
-from dash import Dash, html, dash_table, dcc, Input, Output, State, callback
+from dash_extensions.enrich import Dash, html, dash_table, dcc, Input, Output, State,ctx
+from dash import callback
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
@@ -23,6 +24,8 @@ columns = data.columns
 X_train_1, X_test_1, y_train_1, y_test_1 = split_train_test(data_discretise)
 X_train_2, X_test_2, y_train_2, y_test_2 = split_train_test(data)
 classes = np.unique(y_train_2)
+observation = [264,10.3,475,7.49,0.74,10.56,0.45,7.36,1.87,10.63,0.63,1.5136]
+print(columns[1:])
 ###################################################### Functions #######################################################
 def instanciate_model(algorithme_type,k,distance_type,t_min_samples_split,t_max_depth,min_samples_split,max_depth,nb_trees):
     if algorithme_type=="KNN":
@@ -40,7 +43,7 @@ def instanciate_model(algorithme_type,k,distance_type,t_min_samples_split,t_max_
             model=DecisionTree(t_min_samples_split,t_max_depth)
             model = model.fit(X_train_1, y_train_1)
             joblib.dump(model, 'decision_tree_model_new.pkl')
-            return './decision_tree_model_new.pkl'
+            return 'decision_tree_model_new.pkl'
     elif algorithme_type=="RANDOM FORESTS":
         if max_depth==150 and min_samples_split==35 and nb_trees==10:
             return 'random_forest_model.pkl'
@@ -74,6 +77,7 @@ def calc_silhouette(y_test, predictions):
 def train_predict(algorithme_type="DECISON TREE",k=30,distance_type="euclidean",t_min_samples_split=30,t_max_depth=50,min_samples_split=35,max_depth=150,nb_trees=10):
     model_trained = instanciate_model(algorithme_type,k,distance_type,t_min_samples_split,t_max_depth,min_samples_split,max_depth,nb_trees)
     model = joblib.load(model_trained)
+    print(model_trained)
     if algorithme_type=="KNN":
         predictions = model.predict(X_test_2)
         accuracy = calc_accuracy(y_test_2, predictions)
@@ -94,59 +98,69 @@ def train_predict(algorithme_type="DECISON TREE",k=30,distance_type="euclidean",
         precision = calc_precision(y_test_1, predictions)
         recall = calc_recall(y_test_1, predictions)
         f_score = calc_f_score(y_test_1, predictions)
-        confusion_matrix= calc_confusion_matrix(y_test_1, predictions)
-    return [accuracy,precision,recall,f_score,confusion_matrix]
+    results=[accuracy,precision,recall,f_score]
+    return model_trained,html.Div(
+        [
+            html.Ul([html.Li(f"{results[i]}") for i in range(len(results))]),
+        ], className=""
+    )
 
-def make_prediction(model='./decision_tree_model.pkl',observation=[264,10.3,475,7.49,0.74,10.56,0.45,7.36,1.87,10.63,0.63,1.5136]):
+def make_prediction(model='decision_tree_model.pkl',observation=[264,10.3,475,7.49,0.74,10.56,0.45,7.36,1.87,10.63,0.63,1.5136]):
     model = joblib.load(model)
     return model.predict([observation])
 
 
 
 ####################################################### LAYOUT COMPONENT ####################################################################
-algorithm_dropdown = html.Div([
-    html.H6(" Choose an Algorithm and set its Parameters"),
-    dcc.Dropdown(
-    id='algorithm-dropdown',
-    options=
-       [ {"label": i,"value":i} for i in ["KNN","DECISON TREE","RANDOM FORESTS"]],
-    value="DECISON TREE",
-)])
-parameters_knn = html.Div([
+parameters_knn = [
     html.H6("select K, distance type and number of iteration"),
-    dbc.Input(id="knn-k", type="number", placeholder="k", min=1, step=1, value=2,name="k"),
+    dbc.Input(id="knn-k", type="number", placeholder="k", min=1, step=1, value=30,name="k"),
     dcc.Dropdown(id="distance-type",options=[{"label": i,"value":i} for i in ["euclidean","manhattan","cosine","minkowski"]],
-                 value="euclidean"),
-])
+                 value="euclidean",className="text-dark"),
+    dbc.Button('Train Model', id='knn-train-button')
+]
+knn_content = dbc.Card([dbc.CardBody(parameters_knn),])
 
-parameters_dt = html.Div([
+parameters_dt = [
     html.H6("select max depth, min sample split"),
     dbc.Input(id="dt-max-depth", type="number", placeholder="max_depth", min=1,  step=1, value=50, style={'width': '90%'}),
     dbc.Input(id="dt-min-samples-split", type="number", placeholder="min_samples_split", min=1, step=1, value=30, style={'width': '90%'}),
-])
-parameters_rf = html.Div([
+    dbc.Button('Train Model', id='dt-train-button')
+]
+dt_content = dbc.Card([dbc.CardBody(parameters_dt),])
+parameters_rf = [
     html.H6("select number of trees, max depth and min sample split"),
     dbc.Input(id="n_trees", type="number", placeholder="n_trees", min=1, step=1, value=10, style={'width': '90%'}),
     dbc.Input(id="rf-max-depth", type="number", placeholder="max_depth", min=1, step=1, value=150, style={'width': '90%'}),
     dbc.Input(id="rf-min-samples-split", type="number", placeholder="min_samples_split", min=1,  step=1, value=35, style={'width': '90%'}),
-])
-def get_parameters(algorithm="KNN"):
-    if algorithm == "KNN":
-        return parameters_knn
-    elif algorithm == "DECISON TREE":
-        return parameters_dt
-    elif algorithm == "RANDOM FORESTS":
-        return parameters_rf
+    dbc.Button('Train Model', id='rf-train-button')
+]
+rf_content = dbc.Card([dbc.CardBody(parameters_rf),])
+# def get_parameters(algorithm="DECISON TREE"):
+#     if algorithm == "KNN":
+#         return parameters_knn
+#     elif algorithm == "DECISON TREE":
+#         return parameters_dt
+#     elif algorithm == "RANDOM FORESTS":
+#         return parameters_rf
 
-parameters = dbc.Card([dbc.CardBody(algorithm_dropdown),
-                        dbc.CardBody(html.Div([get_parameters()]),id="parameters-body"),
-                        dbc.CardBody(dbc.Button('Train Model', id='train-button'))
-                        ],color="light", outline=True)
+# parameters = dbc.Card([dbc.CardBody(algorithm_dropdown),
+#                         dbc.CardBody(html.Div(get_parameters(),id="parameters-body"),),
+#                         dbc.CardBody()
+#                         ],color="light", outline=True)
 sample_input= html.Div([html.H6("Test on a new Sample"),
-                         html.Div([dbc.Input(type="number",id=f"sample-input-{i}",placeholder=f"{i}",min=0,className="me-1") for i in columns[1:]],
-                                                                  className="d-flex justify-content-between")],id="sample-input")
+                         html.Div([dbc.Input(type="number",id=f"sample-input-{i}",placeholder=f"{i}",value=j,min=0,className="me-1") for (i,j) in zip(columns[1:],observation[1:])],
+                                                                  className="d-flex justify-content-between"),
+                                                                  dbc.Input(type="number",id="sample-input-OM",placeholder="OM",value=1.5136,min=0,className="me-1")
+                                                                  ],id="sample-input")
 sample_input_card = dbc.Card([dbc.CardBody(sample_input),dbc.CardBody([dbc.Button('Predict', id='predict-button')])],id="sample-input-card",color="light", outline=True)
-
+parameter_tabs = dbc.Tabs(
+    [
+        dbc.Tab(knn_content, label="KNN"),
+        dbc.Tab(dt_content, label="DECISON TREE"),
+        dbc.Tab(rf_content, label="RANDOM FORESTS"),
+    ]
+)
 ####################################################### LAYOUT ####################################################################
 
 layout = dbc.Container([
@@ -154,37 +168,39 @@ layout = dbc.Container([
     html.Hr(),
     dcc.Store(id="current-model",data="",storage_type="session"),
     dbc.Row([
-        dbc.Col(parameters,md=4),
+        dbc.Col(dbc.Card([html.H6("Choose an Algorithm and set its Parameters",className="pt-2 text-center"),parameter_tabs]),md=4),
     ]),
-    dbc.Row([html.Div([i for i in train_predict()],id="metrics-output")]),
-     dbc.Row([dbc.Col([sample_input_card]),dbc.Col([make_prediction()],id="prediction-output")]),
-],fluid=True)
+    dbc.Row([dbc.Col(train_predict()[1],id="metrics-output")]),
+     dbc.Row([dbc.Col([sample_input_card]),dbc.Col(make_prediction(),id="prediction-output")]),
+],fluid=True,
+className="dbc dbc-ag-grid")
 
 ####################################################### CALLBACK ####################################################################
+
+
+
 @callback(
-    Output("parameters-body", "children"),
-    Input("algorithm-dropdown", "value")
+    [Output("current-model", "data"),Output("metrics-output", "children")],
+    [Input("knn-train-button", "n_clicks"),Input("rf-train-button", "n_clicks"),Input("dt-train-button", "n_clicks")],
+    [State("knn-k", "value"),State("distance-type", "value"),
+    State("dt-min-samples-split", "value"),State("dt-max-depth", "value"),
+    State("rf-min-samples-split", "value"),State("rf-max-depth", "value"),State("n_trees", "value")]
 )
-def update_parameters(algorithm):
-    if algorithm == "KNN":
-        return parameters_knn
-    elif algorithm == "DECISON TREE":
-        return parameters_dt
-    elif algorithm == "RANDOM FORESTS":
-        return parameters_rf
-    
-@callback(
-    Output("current-model", "data"),
-    Input("train-button", "n_clicks"),
-    [State("algorithm-dropdown", "value"),State("knn-k", "value"),State("distance-type", "value"),
-     State("dt-min-samples-split", "value"),State("dt-max-depth", "value"),
-     State("rf-max-depth", "value"),State("rf-min-samples-split", "value"),State("n_trees", "value")]
-)
-def update_train_model(algorithm,n_clicks,knn_k,distance_type,dt_min_samples_split,dt_max_depth,rf_min_samples_split,rf_max_depth,n_trees):
-    if n_clicks is None:
-        return None
-    model = train_predict(algorithm,knn_k,distance_type,dt_min_samples_split,dt_max_depth,rf_min_samples_split,rf_max_depth,n_trees)
-    return model
+def update_instnance_model(bt1,bt2,bt3,knn_k,distance_type,dt_min_samples_split,dt_max_depth,rf_min_samples_split,rf__max_depth,n_trees):
+    if bt1 is None and bt2 is None and bt3 is None:
+        return "decision_tree_model.pkl", []
+    if ctx.triggered_id == "rf-train-button":
+        model,metrics = train_predict(algorithme_type="RANDOM FORESTS",min_samples_split=rf_min_samples_split,max_depth=rf__max_depth,nb_trees=n_trees)
+        return model, metrics
+    if ctx.triggered_id == "knn-train-button":
+        model, metrics = train_predict(algorithme_type="KNN",k=knn_k,distance_type=distance_type)
+        return model, metrics
+    if ctx.triggered_id == "dt-train-button":
+        model, metrics = train_predict(algorithme_type="DECISON TREE",t_min_samples_split=dt_min_samples_split,t_max_depth=dt_max_depth)
+        return model, metrics
+
+
+
 
 @callback(
     Output("prediction-output", "children"),
