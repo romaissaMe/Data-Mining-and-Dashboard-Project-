@@ -188,7 +188,7 @@ from sklearn.metrics.pairwise import euclidean_distances
 # using the maximal distance in a cluster
 def intra_cluster(data,cluster):
     # Get the cluster labels assigned to the data points
-    labels = cluster.labels_
+    labels = cluster
 
     # Get the unique cluster labels
     unique_labels = np.unique(labels)
@@ -218,7 +218,7 @@ from sklearn.metrics import pairwise_distances
 # Using the distance between the mean of clusters
 def inter_cluster(data,cluster):   
     # Get the cluster labels assigned to the data points
-    labels = cluster.labels_
+    labels = cluster
 
     # Get the unique cluster labels
     unique_labels = np.unique(labels)

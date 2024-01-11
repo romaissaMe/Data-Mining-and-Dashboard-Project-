@@ -5,14 +5,9 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import numpy as np
-import seaborn as sns
 import matplotlib.pyplot as plt
 from dash import dcc
 import dash_bootstrap_components as dbc
-import dash_ag_grid as dag
-import math
-import random
-import ast
 import joblib
 from algorithms import KNN, DecisionTree, RandomForest, split_train_test
 from metrics import accuracy, precision, recall,f_score,specificity,calculate_silhouette,confusion_matrix
@@ -76,8 +71,6 @@ def calc_silhouette(y_test, predictions):
 def train_predict(algorithme_type="DECISON TREE",k=30,distance_type="euclidean",t_min_samples_split=30,t_max_depth=50,min_samples_split=35,max_depth=150,nb_trees=10):
     model_trained = instanciate_model(algorithme_type,k,distance_type,t_min_samples_split,t_max_depth,min_samples_split,max_depth,nb_trees)
     model = joblib.load(model_trained)
-    print(model_trained)
-    print(model)
     if algorithme_type=="KNN":
         predictions = model.predict(X_test_2)
         accuracy = calc_accuracy(y_test_2, predictions)
@@ -97,7 +90,7 @@ def train_predict(algorithme_type="DECISON TREE",k=30,distance_type="euclidean",
         precision = calc_precision(y_test_1, predictions)
         recall = calc_recall(y_test_1, predictions)
         f_score = calc_f_score(y_test_1, predictions)
-    results=[accuracy,precision,recall,f_score]
+    results = [f"Accuracy: {accuracy:.2f}", f"Precision: {precision:.2f}", f"Recall: {recall:.2f}", f"F1 Score: {f_score:.2f}"]
     return model_trained,predictions,html.Div(
         [
             html.Ul([html.Li(f"{results[i]}") for i in range(len(results))]),
@@ -158,10 +151,10 @@ def true_vs_predicted_labels_plot(y_test, y_pred):
 ####################################################### LAYOUT COMPONENT ####################################################################
 parameters_knn = [
     html.H6("select K, distance type and number of iteration"),
-    dbc.Input(id="knn-k", type="number", placeholder="k", min=1, step=1, value=30,name="k"),
+    dbc.Input(id="knn-k", type="number", placeholder="k", min=1, step=1, value=30,name="k",className="mb-1"),
     dcc.Dropdown(id="distance-type",options=[{"label": i,"value":i} for i in ["euclidean","manhattan","cosine","minkowski"]],
                  value="euclidean",className="text-dark"),
-    dbc.Button('Train Model', id='knn-train-button')
+    dbc.Button('Train Model', id='knn-train-button',className="mt-1")
 ]
 knn_content = dbc.Card([dbc.CardBody(parameters_knn),])
 
@@ -174,9 +167,9 @@ parameters_dt = [
 dt_content = dbc.Card([dbc.CardBody(parameters_dt),])
 parameters_rf = [
     html.H6("select number of trees, max depth and min sample split"),
-    dbc.Input(id="n_trees", type="number", placeholder="n_trees", min=1, step=1, value=10, style={'width': '90%'}),
-    dbc.Input(id="rf-max-depth", type="number", placeholder="max_depth", min=1, step=1, value=150, style={'width': '90%'}),
-    dbc.Input(id="rf-min-samples-split", type="number", placeholder="min_samples_split", min=1,  step=1, value=35, style={'width': '90%'}),
+    dbc.Input(id="n_trees", type="number", placeholder="n_trees", min=1, step=1, value=10,className="mb-1", style={'width': '90%'}),
+    dbc.Input(id="rf-max-depth", type="number", placeholder="max_depth", min=1, step=1, value=150, className="mb-1", style={'width': '90%'}),
+    dbc.Input(id="rf-min-samples-split", type="number", placeholder="min_samples_split", min=1,  step=1, value=35,className="mb-1", style={'width': '90%'}),
     dbc.Button('Train Model', id='rf-train-button')
 ]
 rf_content = dbc.Card([dbc.CardBody(parameters_rf),])
@@ -184,7 +177,7 @@ rf_content = dbc.Card([dbc.CardBody(parameters_rf),])
 sample_input= html.Div([html.H6("Test on a new Sample"),
                          html.Div([dbc.Input(type="number",id=f"sample-input-{i}",placeholder=f"{i}",value=j,min=0,className="me-1") for (i,j) in zip(columns[1:],observation[1:])],
                                                                   className="d-flex justify-content-between"),
-                                                                  dbc.Input(type="number",id="sample-input-OM",placeholder="OM",value=1.5136,min=0,className="me-1")
+                                                                  dbc.Input(type="number",id="sample-input-OM",placeholder="OM",value=1.5136,min=0,className="mt-1",style={'width': '20%'}),
                                                                   ],id="sample-input")
 sample_input_card = dbc.Card([dbc.CardBody(sample_input),dbc.CardBody([dbc.Button('Predict', id='predict-button')])],id="sample-input-card",color="light", outline=True)
 parameter_tabs = dbc.Tabs(
@@ -202,11 +195,12 @@ layout = dbc.Container([
     dcc.Store(id="current-model",data="",storage_type="session"),
     dbc.Row([
         dbc.Col(dbc.Card([html.H6("Choose an Algorithm and set its Parameters",className="pt-2 text-center"),parameter_tabs]),md=4),
-        dbc.Col(train_predict()[1],id="metrics-output"),
-        dbc.Col([sample_input_card,html.Div(make_prediction(),id="prediction-output"),])
-    ]),
+        dbc.Col(train_predict()[2],id="metrics-output"),
+    ],className="mb-2"),
+    
+    dbc.Row([dbc.Col([sample_input_card,html.Div(make_prediction(),id="prediction-output"),])],className="mb-2"),
     dbc.Row([dbc.Col([dcc.Graph(id="confusion-matrix",)]),
-             dbc.Col([dcc.Graph(id="true_pred_scatter")])]),
+             dbc.Col([dcc.Graph(id="true_pred_scatter")])],className="mt-1"),
 ],fluid=True,
 className="dbc dbc-ag-grid")
 
@@ -229,7 +223,7 @@ def update_instnance_model(bt1,bt2,bt3,knn_k,distance_type,dt_min_samples_split,
         fig_1 = confusion_matrix_plot(y_test_1, predictions)
         fig_2 = true_vs_predicted_labels_plot(y_test_1, predictions)
         return "decision_tree_model.pkl",metrics, fig_1, fig_2
-    elif ctx.triggered_id == "rf-train-button":
+    if ctx.triggered_id == "rf-train-button":
         model,predictions,metrics = train_predict(algorithme_type="RANDOM FORESTS",min_samples_split=rf_min_samples_split,max_depth=rf__max_depth,nb_trees=n_trees)
     elif ctx.triggered_id == "knn-train-button":
         model, metrics = train_predict(algorithme_type="KNN",k=knn_k,distance_type=distance_type)
@@ -250,7 +244,8 @@ def update_instnance_model(bt1,bt2,bt3,knn_k,distance_type,dt_min_samples_split,
      State("sample-input-P", "value"),State("sample-input-K", "value"),State("sample-input-EC", "value"),
      State("sample-input-pH", "value"), State("sample-input-S", "value"),State("sample-input-Zn", "value"),
      State("sample-input-Fe", "value"),State("sample-input-Cu", "value"),State("sample-input-Mn", "value"),
-     State("sample-input-B", "value"),State("sample-input-OM", "value")])
+     State("sample-input-B", "value"),State("sample-input-OM", "value")]
+     )
 def update_make_predcion(n_clicks,model_name,N,P,K,EC,pH,S,Zn,Fe,Cu,Mn,B,OM):
     if n_clicks is None:
         return None

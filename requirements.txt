@@ -1,1 +1,8 @@
-dash-extensions==1.0.7
+dash
+dash-extensions
+dash-bootstrap-components
+plotly
+pandas
+numpy
+dash-ag-grid
+joblib

@@ -329,7 +329,7 @@ layout= dbc.Container([
                  dbc.CardBody([
                       display_recommanded_soil()
                  ],id="recommandation-soil",)
-             ])
+             ],className="p-3")
              ],
             )],
     fluid=True,

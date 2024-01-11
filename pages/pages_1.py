@@ -48,7 +48,7 @@ dataset_type_dropdown = dcc.Dropdown(
         {'label': 'Before Cleaning', 'value': 'Before'},
         {'label': 'After Cleaning', 'value': 'After'},
     ],
-    className='database-dropdown',
+    className='database-dropdown mb-3',
 )
 
 attributes_dropdown = dcc.Dropdown(id='attributes-dropdown', className='attributes-dropdown',options=list(column_descriptions.keys())[:-1],value='N')
@@ -94,7 +94,7 @@ def histogram_plot(data=data,attribute='N'):
     return fig
 
 def scatter_plot_attributes(data=data,x='N',y='P'):
-    fig = px.scatter(data,y=y,x=x,template='united_dark')
+    fig = px.scatter(data,y=y,x=x)
     fig.update_layout(title=f"Scatterplot {x} - {y}")
     return fig
     
@@ -118,49 +118,6 @@ def attribute_description(data=data,column='N'):
     ]
     return description_html
 
-# Creating Bootstrap cards to display the description
-# card_content = [
-#     dbc.CardHeader("Attribute Description"),
-#     dbc.CardBody(
-#         [
-#             html.P(description, className="card-text")
-#         ]
-#     ),
-# ]
-
-######################################################  APP LAYOUT  ##################################################################
-
-# layout = html.Div(children=[
-#     dataset_type_dropdown,
-#     html.Div(children=[
-#          html.Div(children=[
-#             html.Div('Average Values by Fertility',className='card-header card-header-custom'),
-#             dcc.Graph(id='fertility-features-bar-plot',figure=fertility_features_bar_plot(),className='card-body p-0',style={'height': '100%', 'width': '100%'}),
-#          ],className='card col-md-6 bg-dark  bg-opacity-50 p-0'),
-#         html.Div(children=[
-#             html.Div('Correlation Matrix',className='card-header card-header-custom'),
-#             dcc.Graph(id='correlation-matrix-plot',figure=correlation_matrix_plot(),className='card-body p-0', style={'height': '100%', 'width': '100%'}),
-#          ],className='card p-0 col'),
-#         html.Div(children=[
-#             html.Div('Fertility Distribution',className='card-header card-header-custom'),
-#             dcc.Graph(id='fertility-pie-plot',figure=fertility_pie_plot(),className='card-body p-0',style={'height': '100%', 'width': '100%'}),
-#          ],className='card p-0 col col-md-2 '),
-          
-#        ],className='p-0 graphs-wrapper-1'),
-#     html.Div([
-#     attributes_dropdown,
-#     html.Div(id='attribute-description-output',style={'display': 'flex','flex-direction': 'row','wrap': 'none', 'justify-content': 'space-around', 'align-items': 'center', 'width': '100%',' height': '100%','margin-top': '1px'}),
-#     ],style={'display': 'flex','flex-direction': 'row','wrap': 'none', 'align-items': 'center', 'height': '100%'}),
-#     html.Div(children=[
-#         html.Div([dcc.Graph(id='box-plot',figure=box_plot(),className='card-body p-0',style={'height': '100%', 'width': '100%'})],className='card col-md-5 bg-secondary-subtle'),
-#         html.Div([dcc.Graph(id='histogram-plot',figure=histogram_plot(),className='card-body p-0',style={'height': '100%', 'width': '100%'})],className='card col-md-5 bg-secondary-subtle'),
-#     ],className='graphs-wrapper-2'),
-#     scatter_plot_attributes_choice,
-#      html.Div(children=[
-#         html.Div([dcc.Graph(id='scatter-plot',figure=scatter_plot_attributes(),className='card-body p-0',style={'height': '100%', 'width': '100%'})],className='p-0 card col-md-5 bg-secondary-subtle'),
-#     ],className='graphs-wrapper-3',id='scatter-container'),
-    
-# ],className='bg-dark.bg-gradient',id='container',style={'height':'100%'})
 
 layout = dbc.Container(children=[
     dataset_type_dropdown,
@@ -171,7 +128,7 @@ layout = dbc.Container(children=[
                 dbc.CardBody([
                     dcc.Graph(id='fertility-features-bar-plot',figure=fertility_features_bar_plot(),className='graph-style')
                 ],className='card-body-custom')
-            ],style={'padding': '0px'})
+            ],)
          ],),
         dbc.Col(children=[
             dbc.Card([
@@ -189,21 +146,21 @@ layout = dbc.Container(children=[
                 ],className='card-body-custom')
             ])
          ],width=2),
-       ]),
+       ],className='mt-2'),
     dbc.Row([
     dbc.Col([
         attributes_dropdown,
     ]),
-    dbc.Col(id='attribute-description-output',style={'display': 'flex','flex-direction': 'row','wrap': 'none', 'justify-content': 'space-around', 'align-items': 'center', 'width': '100%',' height': '100%','margin-top': '1px'}),
-    ],style={'display': 'flex','flex-direction': 'row','wrap': 'none', 'align-items': 'center', 'height': '100%'}),
+    dbc.Col(id='attribute-description-output',style={'display': 'flex','flex-direction': 'row','wrap': 'none', 'justify-content': 'space-around', 'align-items': 'center', 'width': '100%',' height': '100%','margin-top': '2px'}),
+    ],style={'display': 'flex','flex-direction': 'row','wrap': 'none', 'align-items': 'center', 'height': '100%'},className='mt-2'),
     dbc.Row(children=[
         dbc.Col([dcc.Graph(id='box-plot',figure=box_plot(),)]),
         dbc.Col([dcc.Graph(id='histogram-plot',figure=histogram_plot())]),
-    ],className='graphs-wrapper-2'),
+    ],className='mt-2'),
      dbc.Row(children=[
         scatter_plot_attributes_choice,
         dbc.Col([dcc.Graph(id='scatter-plot',figure=scatter_plot_attributes())]),
-    ],id='scatter-container'),
+    ],id='scatter-container',className='mt-2'),
     
 ],id='container')
 

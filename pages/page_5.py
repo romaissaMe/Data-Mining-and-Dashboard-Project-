@@ -13,7 +13,8 @@ import math
 import random
 import ast
 import joblib
-from algorithms import KMEANS, DBSCAN, split_train_test, data_to_data_2d
+from algorithms import K_means as KMEANS
+from algorithms import DBSCAN, split_train_test, data_to_data_2d
 from metrics import calculate_silhouette,inter_cluster,intra_cluster
 
 dash.register_page(__name__, path='/clustering',name='Clustering')
@@ -24,34 +25,26 @@ observation = [264,10.3,475,7.49,0.74,10.56,0.45,7.36,1.87,10.63,0.63,1.5136]
 data_2d = data_to_data_2d(data)
 
 ######################################################## Functions ####################################################################
-def instanciate_model(algorithme_type,k,nb_iterations,distance_type,epsilon,minpts):
+def clust_instanciate_model(data,algorithme_type,k,nb_iterations,distance_type,epsilon,minpts):
     if algorithme_type=="KMEANS":
-        if k==30 and distance_type =="minkowski":
-            return './models/kmeans_model.pkl'
-        else:
             model= KMEANS(k,nb_iterations,distance_type)
-            data=model.fit(data)
-            joblib.dump(model, 'knn_model_new.pkl')
-            return './models/kmeans_model_new.pkl'
+            data_clust=model.fit(data)
+            joblib.dump(model, './models/kmeans_model_new.pkl')
+            return './models/kmeans_model_new.pkl',data_clust
     elif algorithme_type=="DBSCAN":
-        if epsilon==0.5 and minpts==5:
-            return './models/dbscan_cluster.pkl'
-        else:
             model= DBSCAN(epsilon,minpts)
-            data=model.fit(data)
-            joblib.dump(model, 'dbscan_cluster_new.pkl')
-            return './models/dbscan_cluster_new.pkl'
+            data_clust=model.fit(data)
+            joblib.dump(model, './models/dbscan_cluster_new.pkl')
+            return './models/dbscan_cluster_new.pkl',data_clust
             
-def train_predict(algorithme_type="KMEANS",k=3,nb_iterations=50,distance_type="minkowski",epsilon=0.7,minpts=15):
+def clust_train_predict(data=data,algorithme_type="KMEANS",k=3,nb_iterations=50,distance_type="minkowski",epsilon=0.7,minpts=15):
     if algorithme_type=="KMEANS":
-        model_trained = instanciate_model(algorithme_type,k,nb_iterations,distance_type)
+        model_trained,data_clust= clust_instanciate_model(data,algorithme_type,k,nb_iterations,distance_type,epsilon,minpts)
     elif algorithme_type=="DBSCAN":
-        model_trained = instanciate_model(algorithme_type,epsilon,minpts)
+        model_trained,data_clust=clust_instanciate_model(data,algorithme_type,k,nb_iterations,distance_type,epsilon,minpts)
     model = joblib.load(model_trained)
-    print(model_trained)
-    print(model)
     labels = model.labels_
-    silhouette = calculate_silhouette(data, labels)
+    _,silhouette = calculate_silhouette(data_clust)
     intra_c = intra_cluster(data, labels)
     inter_c = inter_cluster(data, labels)
     results = [f"Silhouette: {silhouette}", f"Intra Cluster: {intra_c}", f"Inter Cluster: {inter_c}"]
@@ -78,30 +71,33 @@ def clustering_results_plot(labels,data_2d = data_2d):
 
     layout = go.Layout(
         title='K-means Clustering Results with 3 clusters',
-        xaxis=dict(title='Feature 1'),
-        yaxis=dict(title='Feature 2'),  
+        xaxis=dict(title=''),
+        yaxis=dict(title=''),  
         showlegend=False,
     )
 
     # Create a figure and add the scatter trace
     fig = go.Figure(data=[scatter], layout=layout)
+    return fig
 
 
 ####################################################### LAYOUT COMPONENT ####################################################################
 parameters_kmeans = [
     html.H6("select K and distance type"),
-    dbc.Input(id="k", type="number", placeholder="k", min=1, step=1, value=3, style={'width': '90%'}),
-    dcc.Dropdown(id="distance-type",options=[
+    dbc.Input(id="k", type="number", placeholder="k", min=1, step=1, value=3,className="mb-1"),
+    dcc.Dropdown(id="kmeans-distance-type",options=[
         "euclidean","manhattan","cosine","minkowski"
-    ],value="minkowski"),
-    dbc.Input(id="nb-iteration", type="number", placeholder="nb-iteration", min=1, step=1, value=50, style={'width': '90%'}),
+    ],value="minkowski",className="mb-1"),
+    dbc.Input(id="nb-iteration", type="number", placeholder="nb-iteration", min=1, step=1, value=50, className="mb-1"),
+    dbc.Button("Train", id="kmeans-train-button", n_clicks=0, className="mb-1"),
 ]
 kmeans_ct = dbc.Card([dbc.CardBody(parameters_kmeans),])
 
 parameters_dbscan = [
     html.H6("select eps and minpts"),
-    dbc.Input(id="eps", type="number", placeholder="epsilon", min=0,value=0.5, style={'width': '90%'}),
-    dbc.Input(id="minpts", type="number", placeholder="minPointss", min=0, step=1, value=5, style={'width': '90%'}),
+    dbc.Input(id="eps", type="number", placeholder="epsilon", min=0,value=0.5, style={'width': '90%'},className="mb-1"),
+    dbc.Input(id="minpts", type="number", placeholder="minPointss", min=0, step=1, value=5, className="mb-1"),
+    dbc.Button("Train", id="dbscan-train-button", n_clicks=0, className="mb-1"),
 ]
 dbscan_ct = dbc.Card([dbc.CardBody(parameters_dbscan),])
 
@@ -125,9 +121,9 @@ layout = dbc.Container([
     dcc.Store(id="clust-current-model",data="",storage_type="session"),
     dbc.Row([
         dbc.Col(dbc.Card([html.H6("Choose an Algorithm and set its Parameters",className="pt-2 text-center"),parameter_tabs]),md=4),
-        dbc.Col(train_predict()[2],id="clust-metrics-output"),
+        dbc.Col(clust_train_predict()[2],id="clust-metrics-output"),
     ]),
-    dbc.Row([dbc.Col(dcc.Graph(id="clust-plot"),md=8)]),
+    dbc.Row([dbc.Col(dcc.Graph(id="clust-plot"),md=10)]),
 ],fluid=True)
 
 ############################## CALLBACK ########################   
@@ -136,21 +132,23 @@ layout = dbc.Container([
 
 @callback(
     [Output("clust-current-model", "data"),Output("clust-metrics-output", "children"),
-    Output("confusion-matrix", "figure"),Output("true_pred_scatter", "figure")],
+     Output("clust-plot", "figure")],
     [Input("kmeans-train-button", "n_clicks"),Input("dbscan-train-button", "n_clicks")],
-    [State("k", "value"),State("distance-type", "value"),State("nb-iterations", "value"),
+    [State("k", "value"),State("kmeans-distance-type", "value"),State("nb-iteration", "value"),
      State("eps", "value"),State("minpts", "value")],
 )
-def update_instnance_model(bt1,bt2,k,distance_type,nb_iteration,eps,minpts):
+def update_clust_instnance_model(bt1,bt2,k,distance_type,nb_iteration,eps,minpts):
     if bt1 is None and bt2 is None:
-        model,labels,metrics = train_predict(algorithme_type="KMEANS")
+        model,labels,metrics = clust_train_predict(data=data,algorithme_type="KMEANS",k=k,distance_type=distance_type,nb_iterations=nb_iteration)
         fig_1 = clustering_results_plot(labels)
-        return "kmeans_model.pkl",metrics, fig_1
+        print
+        return model, metrics, fig_1
     elif ctx.triggered_id == "kmeans-train-button":
-        model,labels,metrics = train_predict(algorithme_type="KMEANS",k=k,distance_type=distance_type,nb_iterations=nb_iteration)
+        model,labels,metrics = clust_train_predict(data=data,algorithme_type="KMEANS",k=k,distance_type=distance_type,nb_iterations=nb_iteration)
+        fig_1 = clustering_results_plot(labels)
+        return model, metrics, fig_1
     elif ctx.triggered_id == "dbscan-train-button":
-        model,labels,metrics = train_predict(algorithme_type="DBSCAN",eps=eps,minpts=minpts)
-
-    fig_1 = clustering_results_plot(labels)
-    return model, metrics, fig_1
+        model,labels,metrics = clust_train_predict(data=data,algorithme_type="DBSCAN",eps=eps,minpts=minpts)
+        fig_1 = clustering_results_plot(labels)
+        return model, metrics, fig_1
 
