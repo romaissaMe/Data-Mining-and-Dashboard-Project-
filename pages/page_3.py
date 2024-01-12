@@ -12,7 +12,7 @@ import dash_ag_grid as dag
 import math
 import random
 import ast
-from algorithms import apriori, generate_association_rules, recommandation_soil
+from algorithms import apriori, generate_association_rules, recommandation_item
 
 dash.register_page(__name__, path='/Frequent_Pattern_Mining',name='Frequent Patterns Mining')
 data= pd.read_csv("./Dataset2.csv")
@@ -159,26 +159,26 @@ def display_kulczynski_metric(association_rules, dataitems):
     forte_rules=[(rule,kulczynski) for rule,kulczynski in forte_rules if kulczynski==max_kulczynski]
     return forte_rules
 
-def FP(data=transactional_data, support=3, metric_type="",confidance_threshold= 0.7):
+def FP(data=transactional_data, support=3, metric_type="confidance",confidance_threshold= 0.7):
     FP = display_FP(data, support)
     FFP = generate_association_rules(FP, confidance_threshold, data)
     if metric_type == "" or metric_type == "confidance":
-        return afficher_association_rules(FFP, metric_type)
+        return afficher_association_rules(FFP, metric_type), FFP
     elif metric_type == "lift":
         FA= display_lift_metric(FFP, data)
-        return afficher_association_rules(FA, metric_type)
+        return afficher_association_rules(FA, metric_type),FFP
     elif metric_type == "cosine":
         FA= display_cosine_metric(FFP, data)
-        return afficher_association_rules(FA, metric_type)
+        return afficher_association_rules(FA, metric_type),FFP
     elif metric_type == "jaccard":
         FA= display_jaccard_metric(FFP, data)
-        return afficher_association_rules(FA, metric_type)
+        return afficher_association_rules(FA, metric_type),FFP
     elif metric_type == "kulczynski":
         FA= display_kulczynski_metric(FFP, data)
-        return afficher_association_rules(FA, metric_type)
+        return afficher_association_rules(FA, metric_type),FFP
 
-def display_recommanded_soil(data=transactional_data,observation = (2.0, 3.0, 2.0, 'Coconut', 'DAP')):
-    result = recommandation_soil(observation,data)
+def display_recommandedation(RA,observation = (2.0, 3.0, 2.0, 'Coconut', 'DAP')):
+    result = recommandation_item(observation,RA)
     return result
    
 
@@ -298,6 +298,7 @@ layout= dbc.Container([
    
     html.H4("Association Rules"),
     html.Hr(className="mt-1"),
+    dcc.Store(id="current-RA",data="",storage_type="session"),
     dbc.Row([
         dbc.Col(
             [
@@ -323,14 +324,13 @@ layout= dbc.Container([
             ],
             width=4
         ),
-      dbc.Col(children=[html.H5("FP Space"),html.Div(FP(),id="FP-space",className="scrollable-div")])
+      dbc.Col(children=[html.H5("FP Space"),html.Div(id="FP-space",className="scrollable-div")])
     ]),
     
     dbc.Row([dbc.Col([html.H5("Try The Recommandation System"),recommandation_options],width=4),
              dbc.Col([
                  dbc.CardHeader("Recommandation Result"),
                  dbc.CardBody([
-                      display_recommanded_soil()
                  ],id="recommandation-soil",)
              ],className="p-3")
              ],
@@ -341,18 +341,20 @@ layout= dbc.Container([
 
 ##################################################### Callbacks ##################################################################################################
 @callback(
-    Output("FP-space","children"),
-    [Input("support","value"),Input("metrics","value"),Input("confidance","value"),]
+    [Output("FP-space","children"),Output("current-RA","data")],
+    [Input("support","value"),Input("metrics","value"),Input("confidance","value")]
 )
 def update_FP(selected_support,selected_metric,selected_confidance):
-    return FP(transactional_data,selected_support,selected_metric,selected_confidance)
+    FR, RA = FP(transactional_data,selected_support,selected_metric,selected_confidance)
+    return FR, str(RA)
 
 @callback(
     Output("recommandation-soil","children"),
     Input("recommandation-btn","n_clicks"),
     [State("temperature","value"),State("humidity","value"),State("rainfall","value"),State("crop","value"),
-     State("fertilizer","value")]
+     State("fertilizer","value"),State("current-RA","data")]
 )
-def update_recommandation(n_clicks,slected_temperature,selected_humidity,selected_rainfall,selected_crop,selected_fertilizer):
+def update_recommandation(n_clicks,slected_temperature,selected_humidity,selected_rainfall,selected_crop,selected_fertilizer,RA):
     observation = (slected_temperature,selected_humidity,selected_rainfall,selected_crop,selected_fertilizer)
-    return display_recommanded_soil(transactional_data,observation)
+    RA_list= ast.literal_eval(RA)
+    return display_recommandedation(RA_list,observation)

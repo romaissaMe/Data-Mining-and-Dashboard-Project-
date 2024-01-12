@@ -19,7 +19,7 @@ from metrics import calculate_silhouette,inter_cluster,intra_cluster
 
 dash.register_page(__name__, path='/clustering',name='Clustering')
 
-data = pd.read_csv('./new_dataset_1.csv')
+data = pd.read_csv('./new_dataset.csv')
 columns = data.columns
 observation = [264,10.3,475,7.49,0.74,10.56,0.45,7.36,1.87,10.63,0.63,1.5136]
 data_2d = data_to_data_2d(data)
@@ -139,16 +139,13 @@ def update_clust_instnance_model(bt1,bt2,k,distance_type,nb_iteration,eps,minpts
     if callback_context.triggered_id == "kmeans-train-button":
         model,labels,metrics = clust_train_predict(data=data,algorithme_type="KMEANS",k=k,distance_type=distance_type,nb_iterations=nb_iteration)
         fig_1 = clustering_results_plot(labels)
-        print("model",model)
         return model, metrics, fig_1
     elif callback_context.triggered_id == "dbscan-train-button":
         model,labels,metrics = clust_train_predict(data=data,algorithme_type="DBSCAN",epsilon=eps,minpts=minpts)
         fig_1 = clustering_results_plot(labels)
-        print("model",model)
         return model, metrics, fig_1
     else:
         model = "./models/kmeans_model.pkl"
-        print("model",model)
         _,labels,metrics = clust_train_predict(data=data,algorithme_type="KMEANS",k=k,distance_type=distance_type,nb_iterations=nb_iteration)
         fig_1 = clustering_results_plot(labels)
         

@@ -104,7 +104,6 @@ def generate_association_rules(FP,conf_min,dataitems):
     for itemset,support in FP:
         if len(itemset) >= 2 and isinstance(itemset[0],tuple):
             frequent_2.append((itemset,support))
-    #print(frequent_2)
 
     association_rules = []
 
@@ -118,16 +117,20 @@ def generate_association_rules(FP,conf_min,dataitems):
 
     return association_rules
 
-def recommandation_soil(observation,data):
-    recommandations=[]
-    for index, row in data.iterrows():
-        if observation in row['Items']:
-            recommandations.append(row['Transaction'])
-        if len(recommandations)>0:
-            return random.choice(list(set(recommandations)))
-        else :
-            return "No recommandation"
 
+import random
+def recommandation_item(observation,RA):
+    recommandations=[]
+    for rule in RA:
+        item1,item2,support,confiance=rule
+        if observation in item1 and len(item2)==1 :
+            recommandations.append((item2,support,confiance))
+    recommandations=[item for item in recommandations if item[1]==max(recommandations, key=lambda x: x[1])[1]]
+    recommandations=[item[0] for item in recommandations if item[2]==max(recommandations, key=lambda x: x[2])[2]]
+    if len(recommandations)==0:
+        return "No recommandation"
+    return random.choice(recommandations)
+    
 
 
 ################################################# DECISON TREE ####################################################
