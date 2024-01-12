@@ -40,7 +40,7 @@ def clust_instanciate_model(data,algorithme_type,k,nb_iterations,distance_type,e
             model.fit(data)
             joblib.dump(model, './models/dbscan_cluster_new.pkl')
             return './models/dbscan_cluster_new.pkl'
-            
+from sklearn.metrics import silhouette_score           
 def clust_train_predict(data=data,algorithme_type="KMEANS",k=3,nb_iterations=50,distance_type="minkowski",epsilon=0.7,minpts=15):
     if algorithme_type=="KMEANS":
         model_trained= clust_instanciate_model(data,algorithme_type,k,nb_iterations,distance_type,epsilon,minpts)
@@ -49,7 +49,7 @@ def clust_train_predict(data=data,algorithme_type="KMEANS",k=3,nb_iterations=50,
     model = joblib.load(model_trained)
     labels = model.labels_
     data_clust = model.data
-    _,silhouette = calculate_silhouette(data_clust)
+    silhouette =silhouette_score(data_clust, labels)
     intra_c = intra_cluster(data, labels)
     inter_c = inter_cluster(data, labels)
     results = [f"Silhouette: {silhouette:.2}", f"Intra Cluster: {intra_c:.2}", f"Inter Cluster: {inter_c:.2}"]
