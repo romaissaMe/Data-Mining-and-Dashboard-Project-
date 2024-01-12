@@ -356,5 +356,11 @@ def update_FP(selected_support,selected_metric,selected_confidance):
 )
 def update_recommandation(n_clicks,slected_temperature,selected_humidity,selected_rainfall,selected_crop,selected_fertilizer,RA):
     observation = (slected_temperature,selected_humidity,selected_rainfall,selected_crop,selected_fertilizer)
-    RA_list= ast.literal_eval(RA)
-    return display_recommandedation(RA_list,observation)
+    try:
+        RA_list= ast.literal_eval(RA)
+        return display_recommandedation(RA_list,observation)
+    except SyntaxError as e:
+        print(f"SyntaxError: {e}")
+        return [" "]
+    
+    

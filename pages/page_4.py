@@ -12,7 +12,7 @@ import joblib
 from algorithms import KNN, DecisionTree, RandomForest, split_train_test
 from metrics import accuracy, precision, recall,f_score,specificity,calculate_silhouette,confusion_matrix
 
-dash.register_page(__name__, path='/ML',name='Classification')
+dash.register_page(__name__, path='/classification',name='Classification')
 data = pd.read_csv('./new_dataset_1.csv')
 data_discretise = pd.read_csv('./new_dataset_discretise.csv')
 columns = data.columns
