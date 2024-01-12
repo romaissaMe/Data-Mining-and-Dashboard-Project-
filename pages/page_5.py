@@ -130,7 +130,7 @@ layout = dbc.Container([
 
 
 @callback(
-    [Output("clust-current-model", "data"),Output("clust-metrics-output", "children")],
+    [Output("clust-current-model", "data"),Output("clust-metrics-output", "children"),Output("clust-plot", "figure")],
     [Input("kmeans-train-button", "n_clicks"),Input("dbscan-train-button", "n_clicks")],
     [State("k", "value"),State("kmeans-distance-type", "value"),State("nb-iteration", "value"),
      State("eps", "value"),State("minpts", "value")],
@@ -138,19 +138,19 @@ layout = dbc.Container([
 def update_clust_instnance_model(bt1,bt2,k,distance_type,nb_iteration,eps,minpts):
     if callback_context.triggered_id == "kmeans-train-button":
         model,labels,metrics = clust_train_predict(data=data,algorithme_type="KMEANS",k=k,distance_type=distance_type,nb_iterations=nb_iteration)
-        # fig_1 = clustering_results_plot(labels)
+        fig_1 = clustering_results_plot(labels)
         print("model",model)
-        return model, metrics
+        return model, metrics, fig_1
     elif callback_context.triggered_id == "dbscan-train-button":
         model,labels,metrics = clust_train_predict(data=data,algorithme_type="DBSCAN",epsilon=eps,minpts=minpts)
-        # fig_1 = clustering_results_plot(labels)
+        fig_1 = clustering_results_plot(labels)
         print("model",model)
-        return model, metrics
+        return model, metrics, fig_1
     else:
         model = "./models/kmeans_model.pkl"
         print("model",model)
         _,labels,metrics = clust_train_predict(data=data,algorithme_type="KMEANS",k=k,distance_type=distance_type,nb_iterations=nb_iteration)
-        # fig_1 = clustering_results_plot(labels)
+        fig_1 = clustering_results_plot(labels)
         
-        return model, metrics
+        return model, metrics, fig_1
 
