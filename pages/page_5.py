@@ -52,7 +52,7 @@ def clust_train_predict(data=data,algorithme_type="KMEANS",k=3,nb_iterations=50,
     _,silhouette = calculate_silhouette(data_clust)
     intra_c = intra_cluster(data, labels)
     inter_c = inter_cluster(data, labels)
-    results = [f"Silhouette: {silhouette}", f"Intra Cluster: {intra_c}", f"Inter Cluster: {inter_c}"]
+    results = [f"Silhouette: {silhouette:.2}", f"Intra Cluster: {intra_c:.2}", f"Inter Cluster: {inter_c:.2}"]
     return model_trained,labels,html.Div(html.Ul([html.Li(f"{results[i]}") for i in range(len(results))]),)
     
     
