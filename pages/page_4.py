@@ -100,7 +100,6 @@ def train_predict(algorithme_type="DECISON TREE",k=30,distance_type="euclidean",
 def make_prediction(model='decision_tree_model.pkl',observation=[264,10.3,475,7.49,0.74,10.56,0.45,7.36,1.87,10.63,0.63,1.5136]):
     model = joblib.load(model)
     prediction = model.predict([observation])
-    print(prediction)
     return prediction
 
 def confusion_matrix_plot(y_test, y_pred):
@@ -160,16 +159,16 @@ knn_content = dbc.Card([dbc.CardBody(parameters_knn),])
 
 parameters_dt = [
     html.H6("select max depth, min sample split"),
-    dbc.Input(id="dt-max-depth", type="number", placeholder="max_depth", min=1,  step=1, value=50, style={'width': '90%'}),
-    dbc.Input(id="dt-min-samples-split", type="number", placeholder="min_samples_split", min=1, step=1, value=30, style={'width': '90%'}),
+    dbc.Input(id="dt-max-depth", type="number", placeholder="max_depth", min=1,  step=1, value=50),
+    dbc.Input(id="dt-min-samples-split", type="number", placeholder="min_samples_split", min=1, step=1, value=30),
     dbc.Button('Train Model', id='dt-train-button')
 ]
 dt_content = dbc.Card([dbc.CardBody(parameters_dt),])
 parameters_rf = [
     html.H6("select number of trees, max depth and min sample split"),
-    dbc.Input(id="n_trees", type="number", placeholder="n_trees", min=1, step=1, value=10,className="mb-1", style={'width': '90%'}),
-    dbc.Input(id="rf-max-depth", type="number", placeholder="max_depth", min=1, step=1, value=150, className="mb-1", style={'width': '90%'}),
-    dbc.Input(id="rf-min-samples-split", type="number", placeholder="min_samples_split", min=1,  step=1, value=35,className="mb-1", style={'width': '90%'}),
+    dbc.Input(id="n_trees", type="number", placeholder="n_trees", min=1, step=1, value=10,className="mb-1"),
+    dbc.Input(id="rf-max-depth", type="number", placeholder="max_depth", min=1, step=1, value=150, className="mb-1"),
+    dbc.Input(id="rf-min-samples-split", type="number", placeholder="min_samples_split", min=1,  step=1, value=35,className="mb-1"),
     dbc.Button('Train Model', id='rf-train-button')
 ]
 rf_content = dbc.Card([dbc.CardBody(parameters_rf),])
@@ -198,7 +197,7 @@ layout = dbc.Container([
         dbc.Col(train_predict()[2],id="metrics-output"),
     ],className="mb-2"),
     
-    dbc.Row([dbc.Col([sample_input_card,html.Div(make_prediction(),id="prediction-output"),])],className="mb-2"),
+    dbc.Row([dbc.Col([sample_input_card,html.Div(id="prediction-output"),])],className="mb-2"),
     dbc.Row([dbc.Col([dcc.Graph(id="confusion-matrix",)]),
              dbc.Col([dcc.Graph(id="true_pred_scatter")])],className="mt-1"),
 ],fluid=True,
@@ -232,6 +231,7 @@ def update_instnance_model(bt1,bt2,bt3,knn_k,distance_type,dt_min_samples_split,
 
     fig_1 = confusion_matrix_plot(y_test_1, predictions)
     fig_2 = true_vs_predicted_labels_plot(y_test_1, predictions)
+    print("running")
     return model, metrics, fig_1, fig_2
 
 

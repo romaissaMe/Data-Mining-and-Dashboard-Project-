@@ -55,16 +55,19 @@ def display_FP(data = transactional_data, support = 3):
     FP = apriori(data, support)
     return FP
   
-def afficher_association_rules(association_rules):
+def afficher_association_rules(association_rules, metric):
     printed_association_rules = []
-    for rule in association_rules:
-        item1,item2,support,confiance=rule
-        printed_association_rules.append(f"{item1} -> {item2} ({support},{confiance})")
-    return html.Div(
-        [
-            html.Ul([html.Li(printed_association_rules[i]) for i in range(len(printed_association_rules))]),
-        ], className="scrollable-div"
-    )
+    if metric  == "confidance" or metric == "":
+        for rule in association_rules:
+            item1,item2,support,confiance=rule
+            printed_association_rules.append(f"{item1} -> {item2} ({support},{confiance})")
+    else:
+        for rule in association_rules:
+            item_1, item_2 = rule
+            item1,item2,support,confiance = item_1
+            printed_association_rules.append(f"{item1} -> {item2} ({support},{confiance},{item_2})")
+    return html.Ul([html.Li(printed_association_rules[i]) for i in range(len(printed_association_rules))]),
+     
 
 def display_lift_metric(association_rules, dataitems):
     forte_rules=[]
@@ -159,20 +162,20 @@ def display_kulczynski_metric(association_rules, dataitems):
 def FP(data=transactional_data, support=3, metric_type="",confidance_threshold= 0.7):
     FP = display_FP(data, support)
     FFP = generate_association_rules(FP, confidance_threshold, data)
-    if metric_type == "":
-        return afficher_association_rules(FFP)
+    if metric_type == "" or metric_type == "confidance":
+        return afficher_association_rules(FFP, metric_type)
     elif metric_type == "lift":
         FA= display_lift_metric(FFP, data)
-        return afficher_association_rules(FA)
+        return afficher_association_rules(FA, metric_type)
     elif metric_type == "cosine":
         FA= display_cosine_metric(FFP, data)
-        return afficher_association_rules(FA)
+        return afficher_association_rules(FA, metric_type)
     elif metric_type == "jaccard":
         FA= display_jaccard_metric(FFP, data)
-        return afficher_association_rules(FA)
+        return afficher_association_rules(FA, metric_type)
     elif metric_type == "kulczynski":
         FA= display_kulczynski_metric(FFP, data)
-        return afficher_association_rules(FA)
+        return afficher_association_rules(FA, metric_type)
 
 def display_recommanded_soil(data=transactional_data,observation = (2.0, 3.0, 2.0, 'Coconut', 'DAP')):
     result = recommandation_soil(observation,data)
@@ -221,7 +224,7 @@ confidance_slider = html.Div(
             min=0,
             max=1,
             step=0.1,
-            value=0.5,
+            value=0.7,
             marks=None,
             tooltip={"placement": "bottom", "always_visible": True},
         )
@@ -244,16 +247,16 @@ transactional_data_grid = dag.AgGrid(
 temperature_input = dbc.Input(
     type="number",
     id="temperature",
-    placeholder=2.0,
+    value = 2.0,
     min=10,
     max=30,
     className="me-1"
 
 )
 humidity_input = dbc.Input(
-    type="float",
+    type="number",
     id="humidity",
-    placeholder=3.0,
+    value=3.0,
     min=float(10),
     max=float(30),
     className="me-1"
@@ -261,7 +264,7 @@ humidity_input = dbc.Input(
 rainfall_input = dbc.Input(
     type="number",
     id="rainfall",
-    placeholder=2.0,
+    value=2.0,
     min=10.0,
     max=30.0,
 )
@@ -320,7 +323,7 @@ layout= dbc.Container([
             ],
             width=4
         ),
-      dbc.Col(children=[html.H5("FP Space"),FP()],id="FP-space")
+      dbc.Col(children=[html.H5("FP Space"),html.Div(FP(),id="FP-space",className="scrollable-div")])
     ]),
     
     dbc.Row([dbc.Col([html.H5("Try The Recommandation System"),recommandation_options],width=4),
@@ -338,11 +341,11 @@ layout= dbc.Container([
 
 ##################################################### Callbacks ##################################################################################################
 @callback(
-    Output("FP-spce","children"),
+    Output("FP-space","children"),
     [Input("support","value"),Input("metrics","value"),Input("confidance","value"),]
 )
-def update_FP(selected_support,selected_metric,selected_confidanse):
-    return FP(transactional_data,selected_support,selected_metric,selected_confidanse)
+def update_FP(selected_support,selected_metric,selected_confidance):
+    return FP(transactional_data,selected_support,selected_metric,selected_confidance)
 
 @callback(
     Output("recommandation-soil","children"),

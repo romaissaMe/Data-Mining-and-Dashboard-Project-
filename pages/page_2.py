@@ -26,7 +26,7 @@ def global_line_chart(data=data,attribute='case count'):
     fig.update_layout(
         xaxis_title='Time Period',
         yaxis_title=f'{attribute}',
-        margin=dict(l=0, r=0, t=0, b=0),  
+        margin=dict(l=0, r=0, t=0, b=1),  
         font=dict(size=10),
     )
     return fig
@@ -127,7 +127,7 @@ def heatmap_zone(data=data):
                     x=grouped_data['zcta'],
                     y=['case count', 'positive tests'],
                     color_continuous_scale='Viridis',
-                    title='Distribution du nombre total des cas confirmés et tests positifs par zones')
+                    title='Total number distribution of confirmed cases and positive tests per zone')
 
     fig.update_xaxes(title_text='Zone')
     fig.update_yaxes(title_text='Attribut')
@@ -148,8 +148,8 @@ def population_test_heatmap(data=data):
     return fig
 
 def case_test_pos_test_relationship_per_period(data=data,period=26):
-    dataset = data.loc[data['time_period'] == period]
-    dataset['zcta']=dataset['zcta'].astype('str')
+    dataset = data.loc[data['time_period'] == period,data.columns]
+    dataset['zcta']=dataset.loc[:,'zcta'].astype('str')
     fig = px.bar(dataset, x='zcta', y=['case count', 'test count', 'positive tests'], 
                 labels={'value': 'Count'},barmode='group', 
                 title='Relationship between Confirmed Cases, Tests Conducted, and Positive Tests Over Time')

@@ -1,5 +1,5 @@
 import dash
-from dash import Dash, html, dash_table, dcc, Input, Output, State, callback,ctx
+from dash import Dash, html, dash_table, dcc, Input, Output, State, callback,ctx,callback_context
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
@@ -32,6 +32,7 @@ def clust_instanciate_model(data,algorithme_type,k,nb_iterations,distance_type,e
             joblib.dump(model, './models/kmeans_model_new.pkl')
             return './models/kmeans_model_new.pkl',data_clust
     elif algorithme_type=="DBSCAN":
+            print('./models/dbscan_cluster_new.pkl')
             model= DBSCAN(epsilon,minpts)
             data_clust=model.fit(data)
             joblib.dump(model, './models/dbscan_cluster_new.pkl')
@@ -41,6 +42,7 @@ def clust_train_predict(data=data,algorithme_type="KMEANS",k=3,nb_iterations=50,
     if algorithme_type=="KMEANS":
         model_trained,data_clust= clust_instanciate_model(data,algorithme_type,k,nb_iterations,distance_type,epsilon,minpts)
     elif algorithme_type=="DBSCAN":
+        print('epsilon',epsilon,'minpts',minpts)
         model_trained,data_clust=clust_instanciate_model(data,algorithme_type,k,nb_iterations,distance_type,epsilon,minpts)
     model = joblib.load(model_trained)
     labels = model.labels_
@@ -48,11 +50,8 @@ def clust_train_predict(data=data,algorithme_type="KMEANS",k=3,nb_iterations=50,
     intra_c = intra_cluster(data, labels)
     inter_c = inter_cluster(data, labels)
     results = [f"Silhouette: {silhouette}", f"Intra Cluster: {intra_c}", f"Inter Cluster: {inter_c}"]
-    return model_trained,labels,html.Div(
-        [
-            html.Ul([html.Li(f"{results[i]}") for i in range(len(results))]),
-        ], className=""
-    )
+    return model_trained,labels,html.Div(html.Ul([html.Li(f"{results[i]}") for i in range(len(results))]),)
+    
     
 
 def clustering_results_plot(labels,data_2d = data_2d):
@@ -95,8 +94,8 @@ kmeans_ct = dbc.Card([dbc.CardBody(parameters_kmeans),])
 
 parameters_dbscan = [
     html.H6("select eps and minpts"),
-    dbc.Input(id="eps", type="number", placeholder="epsilon", min=0,value=0.5, style={'width': '90%'},className="mb-1"),
-    dbc.Input(id="minpts", type="number", placeholder="minPointss", min=0, step=1, value=5, className="mb-1"),
+    dbc.Input(id="eps", type="number", placeholder="epsilon", min=0,value=0.7,className="mb-1"),
+    dbc.Input(id="minpts", type="number", placeholder="minPointss", min=0, step=1, value=15, className="mb-1"),
     dbc.Button("Train", id="dbscan-train-button", n_clicks=0, className="mb-1"),
 ]
 dbscan_ct = dbc.Card([dbc.CardBody(parameters_dbscan),])
@@ -120,35 +119,38 @@ layout = dbc.Container([
     html.Hr(),
     dcc.Store(id="clust-current-model",data="",storage_type="session"),
     dbc.Row([
-        dbc.Col(dbc.Card([html.H6("Choose an Algorithm and set its Parameters",className="pt-2 text-center"),parameter_tabs]),md=4),
-        dbc.Col(clust_train_predict()[2],id="clust-metrics-output"),
+        dbc.Col(dbc.Card([html.H6("Choose an Algorithm and set its Parameters",className="pt-2 text-center"),parameter_tabs]),width=4),
+        dbc.Col(id="clust-metrics-output"),
     ]),
-    dbc.Row([dbc.Col(dcc.Graph(id="clust-plot"),md=10)]),
-],fluid=True)
+    dbc.Row([dbc.Col(dcc.Graph(id="clust-plot"),width=10)]),
+],fluid=True, className="dbc dbc-ag-grid")
 
 ############################## CALLBACK ########################   
 
 
 
 @callback(
-    [Output("clust-current-model", "data"),Output("clust-metrics-output", "children"),
-     Output("clust-plot", "figure")],
+    [Output("clust-current-model", "data"),Output("clust-metrics-output", "children")],
     [Input("kmeans-train-button", "n_clicks"),Input("dbscan-train-button", "n_clicks")],
     [State("k", "value"),State("kmeans-distance-type", "value"),State("nb-iteration", "value"),
      State("eps", "value"),State("minpts", "value")],
 )
 def update_clust_instnance_model(bt1,bt2,k,distance_type,nb_iteration,eps,minpts):
-    if bt1 is None and bt2 is None:
+    if callback_context.triggered_id == "kmeans-train-button":
         model,labels,metrics = clust_train_predict(data=data,algorithme_type="KMEANS",k=k,distance_type=distance_type,nb_iterations=nb_iteration)
-        fig_1 = clustering_results_plot(labels)
-        print
-        return model, metrics, fig_1
-    elif ctx.triggered_id == "kmeans-train-button":
-        model,labels,metrics = clust_train_predict(data=data,algorithme_type="KMEANS",k=k,distance_type=distance_type,nb_iterations=nb_iteration)
-        fig_1 = clustering_results_plot(labels)
-        return model, metrics, fig_1
-    elif ctx.triggered_id == "dbscan-train-button":
-        model,labels,metrics = clust_train_predict(data=data,algorithme_type="DBSCAN",eps=eps,minpts=minpts)
-        fig_1 = clustering_results_plot(labels)
-        return model, metrics, fig_1
+        # fig_1 = clustering_results_plot(labels)
+        print("model",model)
+        return model, metrics
+    elif callback_context.triggered_id == "dbscan-train-button":
+        model,labels,metrics = clust_train_predict(data=data,algorithme_type="DBSCAN",epsilon=eps,minpts=minpts)
+        # fig_1 = clustering_results_plot(labels)
+        print("model",model)
+        return model, metrics
+    else:
+        model = "./models/kmeans_model.pkl"
+        print("model",model)
+        _,labels,metrics = clust_train_predict(data=data,algorithme_type="KMEANS",k=k,distance_type=distance_type,nb_iterations=nb_iteration)
+        # fig_1 = clustering_results_plot(labels)
+        
+        return model, metrics
 

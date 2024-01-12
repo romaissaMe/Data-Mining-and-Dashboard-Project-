@@ -58,7 +58,7 @@ scatter_plot_attributes_choice = dcc.Dropdown(id='scatter-plot-attributes-choice
 def fertility_features_bar_plot(data=data):
     grouped_data = data.groupby('Fertility').mean().reset_index()
     fig=px.bar(grouped_data, x='Fertility', y=[col for col in grouped_data.columns if col != 'Fertility'], barmode='group', 
-                    labels={'Fertility': 'Fertility', 'value': 'Average Value', 'variable': 'Column'},
+                    labels={'Fertility': 'Fertility', 'value': 'Average Value', 'variable': 'Column'},template='vapor'
                    )
     return fig
 
@@ -83,7 +83,7 @@ def correlation_matrix_plot(data=data):
         return fig
 
 def box_plot(data=data,attribute='N'):
-    fig = px.box(data, y=attribute, x='Fertility',template='united_dark')
+    fig = px.box(data, y=attribute, x='Fertility',template='vapor')
     fig.update_layout(title=f"Boxplot for {attribute} Attribute")
     return fig
 
@@ -126,7 +126,7 @@ layout = dbc.Container(children=[
             dbc.Card([
                 dbc.CardHeader('Average Values by Fertility'),
                 dbc.CardBody([
-                    dcc.Graph(id='fertility-features-bar-plot',figure=fertility_features_bar_plot(),className='graph-style')
+                    dcc.Graph(id='fertility-features-bar-plot',className='graph-style')
                 ],className='card-body-custom')
             ],)
          ],),
@@ -134,7 +134,7 @@ layout = dbc.Container(children=[
             dbc.Card([
                 dbc.CardHeader('Correlation Matrix'),
                 dbc.CardBody([
-                    dcc.Graph(id='correlation-matrix-plot',figure=correlation_matrix_plot(),className='graph-style')
+                    dcc.Graph(id='correlation-matrix-plot',className='graph-style')
                 ],className='card-body-custom')
             ])
          ]),
@@ -142,7 +142,7 @@ layout = dbc.Container(children=[
             dbc.Card([
                 dbc.CardHeader('Fertility Distribution'),
                 dbc.CardBody([
-                    dcc.Graph(id='fertility-pie-plot',figure=fertility_pie_plot(),className='graph-style')
+                    dcc.Graph(id='fertility-pie-plot',className='graph-style')
                 ],className='card-body-custom')
             ])
          ],width=2),
@@ -154,15 +154,15 @@ layout = dbc.Container(children=[
     dbc.Col(id='attribute-description-output',style={'display': 'flex','flex-direction': 'row','wrap': 'none', 'justify-content': 'space-around', 'align-items': 'center', 'width': '100%',' height': '100%','margin-top': '2px'}),
     ],style={'display': 'flex','flex-direction': 'row','wrap': 'none', 'align-items': 'center', 'height': '100%'},className='mt-2'),
     dbc.Row(children=[
-        dbc.Col([dcc.Graph(id='box-plot',figure=box_plot(),)]),
-        dbc.Col([dcc.Graph(id='histogram-plot',figure=histogram_plot())]),
+        dbc.Col([dcc.Graph(id='box-plot',)]),
+        dbc.Col([dcc.Graph(id='histogram-plot')]),
     ],className='mt-2'),
      dbc.Row(children=[
         scatter_plot_attributes_choice,
-        dbc.Col([dcc.Graph(id='scatter-plot',figure=scatter_plot_attributes())]),
+        dbc.Col([dcc.Graph(id='scatter-plot')]),
     ],id='scatter-container',className='mt-2'),
     
-],id='container')
+],className='dbc dbc-ag-grid', id = 'container')
 
 
 

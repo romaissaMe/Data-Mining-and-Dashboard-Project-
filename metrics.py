@@ -179,7 +179,10 @@ def calculate_silhouette(data):
         Si_avg/=len(groupe)
         S_avg[key]=Si_avg
         Silhouette+=Si_avg
-    Silhouette/=len(labels)
+    if len(labels)==0:
+        Silhouette = -1
+    else:
+        Silhouette/=len(labels)
 
     return S_avg,Silhouette
 
@@ -189,6 +192,8 @@ from sklearn.metrics.pairwise import euclidean_distances
 def intra_cluster(data,cluster):
     # Get the cluster labels assigned to the data points
     labels = cluster
+    if len(labels) == 0:
+        return None
 
     # Get the unique cluster labels
     unique_labels = np.unique(labels)

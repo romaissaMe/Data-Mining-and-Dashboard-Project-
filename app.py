@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import dash_bootstrap_components as dbc
 from dash_bootstrap_templates import load_figure_template
 
-load_figure_template(['vapor_dark','united_dark'])
+load_figure_template(['vapor','vapor_dark','united_dark'])
 stylesheets= ['./assets/style.css',dbc.themes.VAPOR]
 app = Dash(__name__, suppress_callback_exceptions=True, pages_folder='pages', use_pages=True, external_stylesheets=stylesheets)
 
