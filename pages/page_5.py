@@ -27,25 +27,28 @@ data_2d = data_to_data_2d(data)
 ######################################################## Functions ####################################################################
 def clust_instanciate_model(data,algorithme_type,k,nb_iterations,distance_type,epsilon,minpts):
     if algorithme_type=="KMEANS":
+            if k==3 and nb_iterations==50 and distance_type=="minkowski":
+                return './models/kmeans_model.pkl'
             model= KMEANS(k,nb_iterations,distance_type)
-            data_clust=model.fit(data)
+            model.fit(data)
             joblib.dump(model, './models/kmeans_model_new.pkl')
-            return './models/kmeans_model_new.pkl',data_clust
+            return './models/kmeans_model_new.pkl'
     elif algorithme_type=="DBSCAN":
-            print('./models/dbscan_cluster_new.pkl')
+            if epsilon==0.7 and minpts==15:
+                return './models/dbscan_cluster.pkl'
             model= DBSCAN(epsilon,minpts)
-            data_clust=model.fit(data)
+            model.fit(data)
             joblib.dump(model, './models/dbscan_cluster_new.pkl')
-            return './models/dbscan_cluster_new.pkl',data_clust
+            return './models/dbscan_cluster_new.pkl'
             
 def clust_train_predict(data=data,algorithme_type="KMEANS",k=3,nb_iterations=50,distance_type="minkowski",epsilon=0.7,minpts=15):
     if algorithme_type=="KMEANS":
-        model_trained,data_clust= clust_instanciate_model(data,algorithme_type,k,nb_iterations,distance_type,epsilon,minpts)
+        model_trained= clust_instanciate_model(data,algorithme_type,k,nb_iterations,distance_type,epsilon,minpts)
     elif algorithme_type=="DBSCAN":
-        print('epsilon',epsilon,'minpts',minpts)
-        model_trained,data_clust=clust_instanciate_model(data,algorithme_type,k,nb_iterations,distance_type,epsilon,minpts)
+        model_trained=clust_instanciate_model(data,algorithme_type,k,nb_iterations,distance_type,epsilon,minpts)
     model = joblib.load(model_trained)
     labels = model.labels_
+    data_clust = model.data
     _,silhouette = calculate_silhouette(data_clust)
     intra_c = intra_cluster(data, labels)
     inter_c = inter_cluster(data, labels)
@@ -69,7 +72,7 @@ def clustering_results_plot(labels,data_2d = data_2d):
     )
 
     layout = go.Layout(
-        title='K-means Clustering Results with 3 clusters',
+        title='K-means Clustering Results with k clusters',
         xaxis=dict(title=''),
         yaxis=dict(title=''),  
         showlegend=False,

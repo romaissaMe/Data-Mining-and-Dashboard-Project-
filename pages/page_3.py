@@ -179,7 +179,7 @@ def FP(data=transactional_data, support=3, metric_type="confidance",confidance_t
 
 def display_recommandedation(RA,observation = (2.0, 3.0, 2.0, 'Coconut', 'DAP')):
     result = recommandation_item(observation,RA)
-    return result
+    return str(result)
    
 
 ############################################################ Layout Components ####################################################################
@@ -248,8 +248,8 @@ temperature_input = dbc.Input(
     type="number",
     id="temperature",
     value = 2.0,
-    min=10,
-    max=30,
+    min=0,
+    max=5,
     className="me-1"
 
 )
@@ -257,16 +257,16 @@ humidity_input = dbc.Input(
     type="number",
     id="humidity",
     value=3.0,
-    min=float(10),
-    max=float(30),
+    min=0,
+    max=5,
     className="me-1"
 )
 rainfall_input = dbc.Input(
     type="number",
     id="rainfall",
     value=2.0,
-    min=10.0,
-    max=30.0,
+    min=0,
+    max=5,
 )
 crop_input = dcc.Dropdown(
    options=["Coconut","DAP"],

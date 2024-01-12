@@ -347,6 +347,7 @@ class K_means:
         self.distance= dist_type
         self.labels_=[]
         self.centroids_=[]
+        self.data = None
     def calculer_centroide(self,cluster):
         moy=[attribut for attribut in cluster[0]]
 
@@ -401,6 +402,7 @@ class K_means:
                 if any(np.array_equal(row, instance) for instance in instances):
                     data.at[index,'Cluster']=i
                     self.labels_[index]=i
+        self.data = data
         return data
 
 
@@ -413,6 +415,7 @@ class DBSCAN:
         self.Minpts = Minpts
         self.labels_ = []
         self.distances_=[]
+        self.data = None
 
     def get_params(self, deep=True):
         return {
@@ -484,6 +487,7 @@ class DBSCAN:
             if any(np.array_equal(row, b) for b in Bruit):    
                 data.at[index,'Cluster']=-1
                 self.labels_[index]=-1
+        self.data = data
         return data
     
 
