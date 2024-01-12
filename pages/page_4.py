@@ -1,6 +1,6 @@
 import dash
 from dash_extensions.enrich import Dash, html, dash_table, dcc, Input, Output, State
-from dash import callback, ctx
+from dash import callback, callback_context
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
@@ -71,6 +71,7 @@ def calc_silhouette(y_test, predictions):
 def train_predict(algorithme_type="DECISON TREE",k=30,distance_type="euclidean",t_min_samples_split=30,t_max_depth=50,min_samples_split=35,max_depth=150,nb_trees=10):
     model_trained = instanciate_model(algorithme_type,k,distance_type,t_min_samples_split,t_max_depth,min_samples_split,max_depth,nb_trees)
     model = joblib.load(model_trained)
+    print("model name",model_trained)
     if algorithme_type=="KNN":
         predictions = model.predict(X_test_2)
         accuracy = calc_accuracy(y_test_2, predictions)
@@ -83,7 +84,6 @@ def train_predict(algorithme_type="DECISON TREE",k=30,distance_type="euclidean",
         precision = calc_precision(y_test_1, predictions)
         recall = calc_recall(y_test_1, predictions)
         f_score = calc_f_score(y_test_1, predictions)
-        confusion_matrix= calc_confusion_matrix(y_test_1, predictions)
     elif algorithme_type=="RANDOM FORESTS":
         predictions = model.predict(X_test_1)
         accuracy = calc_accuracy(y_test_1, predictions)
@@ -194,7 +194,7 @@ layout = dbc.Container([
     dcc.Store(id="current-model",data="",storage_type="session"),
     dbc.Row([
         dbc.Col(dbc.Card([html.H6("Choose an Algorithm and set its Parameters",className="pt-2 text-center"),parameter_tabs]),md=4),
-        dbc.Col(train_predict()[2],id="metrics-output"),
+        dbc.Col(id="metrics-output"),
     ],className="mb-2"),
     
     dbc.Row([dbc.Col([sample_input_card,html.Div(id="prediction-output"),])],className="mb-2"),
@@ -218,20 +218,22 @@ className="dbc dbc-ag-grid")
 def update_instnance_model(bt1,bt2,bt3,knn_k,distance_type,dt_min_samples_split,dt_max_depth,rf_min_samples_split,rf__max_depth,n_trees):
     
     if bt1 is None and bt2 is None and bt3 is None:
-        model,predictions,metrics = train_predict(algorithme_type="DECISON TREE")
-        fig_1 = confusion_matrix_plot(y_test_1, predictions)
-        fig_2 = true_vs_predicted_labels_plot(y_test_1, predictions)
-        return "decision_tree_model.pkl",metrics, fig_1, fig_2
-    if ctx.triggered_id == "rf-train-button":
+        model,predictions,metrics = train_predict(algorithme_type="KNN")
+        fig_1 = confusion_matrix_plot(y_test_2, predictions)
+        fig_2 = true_vs_predicted_labels_plot(y_test_2, predictions)
+        return "knn_model.pkl",metrics, fig_1, fig_2
+    if callback_context.triggered_id == "rf-train-button":
         model,predictions,metrics = train_predict(algorithme_type="RANDOM FORESTS",min_samples_split=rf_min_samples_split,max_depth=rf__max_depth,nb_trees=n_trees)
-    elif ctx.triggered_id == "knn-train-button":
-        model, metrics = train_predict(algorithme_type="KNN",k=knn_k,distance_type=distance_type)
-    elif ctx.triggered_id == "dt-train-button":
+    elif callback_context.triggered_id == "knn-train-button":
+        model, predictions, metrics = train_predict(algorithme_type="KNN",k=knn_k,distance_type=distance_type)
+        fig_1 = confusion_matrix_plot(y_test_2, predictions)
+        fig_2 = true_vs_predicted_labels_plot(y_test_2, predictions)
+        return model, metrics, fig_1, fig_2
+    elif callback_context.triggered_id == "dt-train-button":
         model,predictions, metrics = train_predict(algorithme_type="DECISON TREE",t_min_samples_split=dt_min_samples_split,t_max_depth=dt_max_depth)
 
     fig_1 = confusion_matrix_plot(y_test_1, predictions)
     fig_2 = true_vs_predicted_labels_plot(y_test_1, predictions)
-    print("running")
     return model, metrics, fig_1, fig_2
 
 
