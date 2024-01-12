@@ -3,7 +3,7 @@
 
 ## Installation
 
-To install the required dependencies, run the following command: pip intall requirements.txt
+To install the required dependencies, run the following command: pip install requirements.txt
 
 
 ## Usage
