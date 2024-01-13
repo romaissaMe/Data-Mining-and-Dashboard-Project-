@@ -71,7 +71,7 @@ def clustering_results_plot(labels,data_2d = data_2d):
     )
 
     layout = go.Layout(
-        title='K-means Clustering Results with k clusters',
+        title='Clustering Results',
         xaxis=dict(title=''),
         yaxis=dict(title=''),  
         showlegend=False,
@@ -102,7 +102,7 @@ parameters_dbscan = [
 ]
 dbscan_ct = dbc.Card([dbc.CardBody(parameters_dbscan),])
 
-parameter_tabs = dbc.Tabs(
+clust_parameter_tabs = dbc.Tabs(
     [
         dbc.Tab(kmeans_ct, label="KMEANS"),
         dbc.Tab(dbscan_ct, label="DBSCAN"),
@@ -121,8 +121,8 @@ layout = dbc.Container([
     html.Hr(),
     dcc.Store(id="clust-current-model",data="",storage_type="session"),
     dbc.Row([
-        dbc.Col(dbc.Card([html.H6("Choose an Algorithm and set its Parameters",className="pt-2 text-center"),parameter_tabs])),
-        dbc.Col(id="clust-metrics-output",className="fs-3"),
+        dbc.Col(dbc.Card([html.H6("Choose an Algorithm and set its Parameters",className="pt-2 text-center"),clust_parameter_tabs])),
+        dbc.Col(dbc.Spinner(id="clust-metrics-output"),className="fs-3"),
     ]),
     dbc.Row([dbc.Col(dcc.Graph(id="clust-plot"))],className="mt-3"),
 ],fluid=True, className="dbc dbc-ag-grid")
