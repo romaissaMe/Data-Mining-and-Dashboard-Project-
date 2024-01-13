@@ -174,9 +174,9 @@ parameters_rf = [
 rf_content = dbc.Card([dbc.CardBody(parameters_rf),])
 
 sample_input= html.Div([html.H6("Test on a new Sample"),
-                         html.Div([dbc.Input(type="number",id=f"sample-input-{i}",placeholder=f"{i}",value=j,min=0,className="me-1") for (i,j) in zip(columns[1:],observation[1:])],
-                                                                  className="d-flex justify-content-between"),
-                                                                  dbc.Input(type="number",id="sample-input-OM",placeholder="OM",value=1.5136,min=0,className="mt-1",style={'width': '20%'}),
+                         html.Div([dbc.Input(type="number",id=f"sample-input-{i}",placeholder=f"{i}",min=0,className="me-1") for (i,j) in zip(columns[1:],observation[1:])],
+                                                                  className="d-flex flex-column justify-content-between"),
+                                                                  dbc.Input(type="number",id="sample-input-OM",placeholder="OM",min=0,className=""),
                                                                   ],id="sample-input")
 sample_input_card = dbc.Card([dbc.CardBody(sample_input),dbc.CardBody([dbc.Button('Predict', id='predict-button')])],id="sample-input-card",color="light", outline=True)
 parameter_tabs = dbc.Tabs(
@@ -193,8 +193,8 @@ layout = dbc.Container([
     html.Hr(),
     dcc.Store(id="current-model",data="",storage_type="session"),
     dbc.Row([
-        dbc.Col(dbc.Card([html.H6("Choose an Algorithm and set its Parameters",className="pt-2 text-center"),parameter_tabs]),md=4),
-        dbc.Col(id="metrics-output"),
+        dbc.Col(dbc.Card([html.H6("Choose an Algorithm and set its Parameters",className="pt-2 text-center"),parameter_tabs])),
+        dbc.Col(id="metrics-output",className="fs-3"),
     ],className="mb-2"),
     
     dbc.Row([dbc.Col([sample_input_card,html.Div(id="prediction-output"),])],className="mb-2"),

@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import dash_bootstrap_components as dbc
 from dash_bootstrap_templates import load_figure_template
 
-load_figure_template(['vapor','vapor_dark','united_dark'])
+load_figure_template(['vapor_dark','vapor','united_dark'])
 stylesheets= ['./assets/style.css',dbc.themes.VAPOR]
 app = Dash(__name__, suppress_callback_exceptions=True, pages_folder='pages', use_pages=True, external_stylesheets=stylesheets)
 
@@ -22,15 +22,15 @@ dataset_dropdown = dcc.Dropdown(
         {'label': 'Covid Database', 'value': 'Covid Database'},
         {'label': 'Climate Database', 'value': 'Climate Database'},
     ],
-    className='database-dropdown',
+    className='database-dropdown text-secondary',
 )
 
 app.layout = html.Div(children=[
     html.Div(children=[
         dcc.Link(
-            page['name'],href=page['relative_path'],className='me-3 text-primary text-decoration-none'
+            page['name'],href=page['relative_path'],className='me-3 text-secondary text-decoration-none'
         ) for page in dash.page_registry.values()
-    ],id='page-content', className='bg-dark p-2 mb-1 d-flex justify-content-start' ),
+    ],id='page-content', className='bg-dark p-2 mb-1 d-flex justify-content-center' ),
     html.Div([dash.page_container],id='page-container',className='page-container'),
     
 ],className='main-container',id='main-container')

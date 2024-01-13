@@ -239,9 +239,10 @@ transactional_data_grid = dag.AgGrid(
     id="transactional-data",
     columnDefs=[{"field": i} for i in transactional_data.columns],
     rowData=transactional_data.to_dict("records"),
-    defaultColDef={"flex": 1, "minWidth": 120, "sortable": True, "resizable": True, "filter": True},
+    defaultColDef={"minWidth": 120, "sortable": True, "resizable": True, "filter": True},
     dashGridOptions={"rowSelection":"multiple"},
     columnSize="sizeToFit",
+    className="ag-theme-balham-dark",
 )
 
 temperature_input = dbc.Input(
@@ -328,11 +329,11 @@ layout= dbc.Container([
     ]),
     
     dbc.Row([dbc.Col([html.H5("Try The Recommandation System"),recommandation_options],width=4),
-             dbc.Col([
+             dbc.Col([html.H5(""),dbc.Card([
                  dbc.CardHeader("Recommandation Result"),
                  dbc.CardBody([
-                 ],id="recommandation-soil",)
-             ],className="p-3")
+                 ],id="recommandation-soil",)])
+             ],className="p-5")
              ],
             )],
     fluid=True,

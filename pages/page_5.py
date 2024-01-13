@@ -21,13 +21,12 @@ dash.register_page(__name__, path='/clustering',name='Clustering')
 
 data = pd.read_csv('./new_dataset.csv')
 columns = data.columns
-observation = [264,10.3,475,7.49,0.74,10.56,0.45,7.36,1.87,10.63,0.63,1.5136]
 data_2d = data_to_data_2d(data)
 
 ######################################################## Functions ####################################################################
 def clust_instanciate_model(data,algorithme_type,k,nb_iterations,distance_type,epsilon,minpts):
     if algorithme_type=="KMEANS":
-            if k==3 and nb_iterations==50 and distance_type=="minkowski":
+            if k==3 and nb_iterations==50 and distance_type=="euclidean":
                 return './models/kmeans_model.pkl'
             model= KMEANS(k,nb_iterations,distance_type)
             model.fit(data)
@@ -41,7 +40,7 @@ def clust_instanciate_model(data,algorithme_type,k,nb_iterations,distance_type,e
             joblib.dump(model, './models/dbscan_cluster_new.pkl')
             return './models/dbscan_cluster_new.pkl'
 from sklearn.metrics import silhouette_score           
-def clust_train_predict(data=data,algorithme_type="KMEANS",k=3,nb_iterations=50,distance_type="minkowski",epsilon=0.7,minpts=15):
+def clust_train_predict(data=data,algorithme_type="KMEANS",k=3,nb_iterations=50,distance_type="euclidean",epsilon=0.7,minpts=15):
     if algorithme_type=="KMEANS":
         model_trained= clust_instanciate_model(data,algorithme_type,k,nb_iterations,distance_type,epsilon,minpts)
     elif algorithme_type=="DBSCAN":
@@ -49,7 +48,7 @@ def clust_train_predict(data=data,algorithme_type="KMEANS",k=3,nb_iterations=50,
     model = joblib.load(model_trained)
     labels = model.labels_
     data_clust = model.data
-    silhouette =silhouette_score(data_clust, labels)
+    silhouette =silhouette_score(data, labels)
     intra_c = intra_cluster(data, labels)
     inter_c = inter_cluster(data, labels)
     results = [f"Silhouette: {silhouette:.2}", f"Intra Cluster: {intra_c:.2}", f"Inter Cluster: {inter_c:.2}"]
@@ -89,7 +88,7 @@ parameters_kmeans = [
     dbc.Input(id="k", type="number", placeholder="k", min=1, step=1, value=3,className="mb-1"),
     dcc.Dropdown(id="kmeans-distance-type",options=[
         "euclidean","manhattan","cosine","minkowski"
-    ],value="minkowski",className="mb-1"),
+    ],value="euclidean",className="mb-1 text-primary"),
     dbc.Input(id="nb-iteration", type="number", placeholder="nb-iteration", min=1, step=1, value=50, className="mb-1"),
     dbc.Button("Train", id="kmeans-train-button", n_clicks=0, className="mb-1"),
 ]
@@ -122,10 +121,10 @@ layout = dbc.Container([
     html.Hr(),
     dcc.Store(id="clust-current-model",data="",storage_type="session"),
     dbc.Row([
-        dbc.Col(dbc.Card([html.H6("Choose an Algorithm and set its Parameters",className="pt-2 text-center"),parameter_tabs]),width=4),
-        dbc.Col(id="clust-metrics-output"),
+        dbc.Col(dbc.Card([html.H6("Choose an Algorithm and set its Parameters",className="pt-2 text-center"),parameter_tabs])),
+        dbc.Col(id="clust-metrics-output",className="fs-3"),
     ]),
-    dbc.Row([dbc.Col(dcc.Graph(id="clust-plot"),width=10)]),
+    dbc.Row([dbc.Col(dcc.Graph(id="clust-plot"))],className="mt-3"),
 ],fluid=True, className="dbc dbc-ag-grid")
 
 ############################## CALLBACK ########################   

@@ -14,10 +14,10 @@ dash.register_page(__name__, path='/covid_database',name='Covid-19 Database')
 data= pd.read_csv("./new_dataset_2.csv")
 data['Start date']= pd.to_datetime(data['Start date'])
 data['end date']= pd.to_datetime(data['end date'])
-attribute_dropdown = dcc.Dropdown(id='attribute-dropdown', className='attributes-dropdown',options=list(["case count","test count","positive tests","case rate","test rate","positivity rate"]),value='case count',style={'width':'150px'})
-zone_dropdown = dcc.Dropdown(id='zone-dropdown', className='attributes-dropdown mb-1',options=list(data['zcta'].unique()),value=94087)
-season_dropdown = dcc.Dropdown(id='season-dropdown',className='attributes-dropdown  mb-1',options=list(['monthly','weekly','yearly']),value='monthly')
-period_dropdown = dcc.Dropdown(id='period-dropdown', className='attributes-dropdown  mb-1',options=list(data['time_period'].unique()),value=26)
+attribute_dropdown = dcc.Dropdown(id='attribute-dropdown', className='attributes-dropdown text-secondary me-2 border border-light',options=list(["case count","test count","positive tests","case rate","test rate","positivity rate"]),value='case count',style={'width':'150px'})
+zone_dropdown = dcc.Dropdown(id='zone-dropdown', className='attributes-dropdown mb-1 text-secondary',options=list(data['zcta'].unique()),value=94087)
+season_dropdown = dcc.Dropdown(id='season-dropdown',className='attributes-dropdown mt-1 mb-3 text-secondary',options=list(['monthly','weekly','yearly']),value='monthly')
+period_dropdown = dcc.Dropdown(id='period-dropdown', className='attributes-dropdown  mb-2 text-secondary',options=list(data['time_period'].unique()),value=26)
 ################################################## UTILITY FUNCTIONS #####################################################################
 def global_line_chart(data=data,attribute='case count'):
     grouped_data = data.groupby('time_period')[attribute].sum().reset_index()
@@ -26,7 +26,8 @@ def global_line_chart(data=data,attribute='case count'):
     fig.update_layout(
         xaxis_title='Time Period',
         yaxis_title=f'{attribute}',
-        margin=dict(l=0, r=0, t=0, b=1),  
+        title= f"Global {attribute} grouped by Time Peiod",
+        margin=dict(l=0, r=0, b=0),  
         font=dict(size=10),
     )
     return fig
@@ -39,7 +40,7 @@ def line_chart_per_zone(data=data,attribute='case count',zone=94087):
     fig.update_layout(
         xaxis_title='Time Period',
         yaxis_title=f'{attribute}',
-        margin=dict(l=0, r=0, t=0, b=0),  
+        title = f"{attribute} per zone grouped by by Time Peiod",
         font=dict(size=10),  
     )
     return fig
@@ -158,7 +159,7 @@ def case_test_pos_test_relationship_per_period(data=data,period=26):
 ################################################################ Page Layout ################################################################
 
 layout= dbc.Container([
-    dbc.Row([dbc.Col([attribute_dropdown]),dbc.Col([zone_dropdown])],className='mb-3'),
+    dbc.Row([html.Div([attribute_dropdown,zone_dropdown],className="d-flex justify-content-start")],className='mb-3 '),
     dbc.Row([
         dbc.Col([dcc.Graph(id='global-line-chart',figure=global_line_chart(),
                            style={'height': '100%', 'width': '100%'})],width=5),
@@ -176,9 +177,8 @@ layout= dbc.Container([
         dbc.Col([dcc.Graph(id='top-zones-bar-plot',figure=top_zones_bar_plot())]),
     ],className='mb-1'),
     dbc.Row([
+        dbc.Col([period_dropdown,dcc.Graph(figure=case_test_pos_test_relationship_per_period(),id='case-test-pos-test-relationship-per-period',className='mt-1'),]),
         dbc.Col([dcc.Graph(figure=population_test_heatmap(),id='population-test-heatmap')],width=4),
-        dbc.Col([period_dropdown,dcc.Graph(figure=case_test_pos_test_relationship_per_period(),id='case-test-pos-test-relationship-per-period',className='mt-1'),])
-       
     ])
         
 ],fluid=True,

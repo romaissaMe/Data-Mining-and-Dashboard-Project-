@@ -48,17 +48,17 @@ dataset_type_dropdown = dcc.Dropdown(
         {'label': 'Before Cleaning', 'value': 'Before'},
         {'label': 'After Cleaning', 'value': 'After'},
     ],
-    className='database-dropdown mb-3',
+    className='database-dropdown mb-3 text-secondary bg-light',
 )
 
-attributes_dropdown = dcc.Dropdown(id='attributes-dropdown', className='attributes-dropdown',options=list(column_descriptions.keys())[:-1],value='N')
-scatter_plot_attributes_choice = dcc.Dropdown(id='scatter-plot-attributes-choice', className='attributes-dropdown-md',options=list(column_descriptions.keys())[:-1],value=['N','P'],multi=True)
+attributes_dropdown = dcc.Dropdown(id='attributes-dropdown', className='attributes-dropdown text-secondary',options=list(column_descriptions.keys())[:-1],value='N')
+scatter_plot_attributes_choice = dcc.Dropdown(id='scatter-plot-attributes-choice', className='attributes-dropdown-md text-secondary',options=list(column_descriptions.keys())[:-1],value=['N','P'],multi=True)
 ##################################################### Graphs Functions ########################################################
 
 def fertility_features_bar_plot(data=data):
     grouped_data = data.groupby('Fertility').mean().reset_index()
     fig=px.bar(grouped_data, x='Fertility', y=[col for col in grouped_data.columns if col != 'Fertility'], barmode='group', 
-                    labels={'Fertility': 'Fertility', 'value': 'Average Value', 'variable': 'Column'},template='vapor'
+                    labels={'Fertility': 'Fertility', 'value': 'Average Value', 'variable': 'Column'}
                    )
     return fig
 
@@ -83,7 +83,7 @@ def correlation_matrix_plot(data=data):
         return fig
 
 def box_plot(data=data,attribute='N'):
-    fig = px.box(data, y=attribute, x='Fertility',template='vapor')
+    fig = px.box(data, y=attribute, x='Fertility')
     fig.update_layout(title=f"Boxplot for {attribute} Attribute")
     return fig
 
@@ -148,11 +148,11 @@ layout = dbc.Container(children=[
          ],width=2),
        ],className='mt-2'),
     dbc.Row([
-    dbc.Col([
+    dbc.Col(id='attribute-description-output',style={'display': 'flex','flex-direction': 'row','wrap': 'none', 'justify-content': 'space-between', 'align-items': 'center', 'width': '100%',' height': '100%','margin-top': '2px'}),
+    ],className='mt-2'),
+    dbc.Row([dbc.Col([
         attributes_dropdown,
-    ]),
-    dbc.Col(id='attribute-description-output',style={'display': 'flex','flex-direction': 'row','wrap': 'none', 'justify-content': 'space-around', 'align-items': 'center', 'width': '100%',' height': '100%','margin-top': '2px'}),
-    ],style={'display': 'flex','flex-direction': 'row','wrap': 'none', 'align-items': 'center', 'height': '100%'},className='mt-2'),
+    ])],className="my-1"),
     dbc.Row(children=[
         dbc.Col([dcc.Graph(id='box-plot',)]),
         dbc.Col([dcc.Graph(id='histogram-plot')]),
@@ -162,7 +162,7 @@ layout = dbc.Container(children=[
         dbc.Col([dcc.Graph(id='scatter-plot')]),
     ],id='scatter-container',className='mt-2'),
     
-],className='dbc dbc-ag-grid', id = 'container')
+],fluid=True,className='dbc dbc-ag-grid', id = 'container')
 
 
 
