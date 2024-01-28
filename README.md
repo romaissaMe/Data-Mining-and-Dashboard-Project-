@@ -1,13 +1,4 @@
-<head>
-    <style>
-        .screens {
-            display: flex;
-            flex-direction: row;
-            gap: 2px;
-            margin-top: 1px;
-        }
-    </style>
-</head>
+
 
 # Data Mining Dashboard Application
 
@@ -18,15 +9,15 @@ This Data Mining Dashboard application is designed to address the challenges ass
 The application is built using Dash, a Python framework for creating interactive web applications, and it features machine learning algorithms and metrics coded from scratch in Python.
 
 ## Screenshots
-<div class="screens">
+<div style="display: flex; flex-direction: row; gap: 2px; margin-top: 1px; ">
  <img src="./assets/Sol-Database.png">
  <img src="./assets/Covid-19-Database.png">
 </div>
-<div class="screens">
+<div style="display: flex; flex-direction: row; gap: 2px; margin-top: 1px;">
  <img src="./assets/Classification.png">
  <img src="./assets/Clustering.png">
 </div>
- <div class="screens">
+ <div style="display: flex; flex-direction: row; gap: 2px; margin-top: 1px; justify-content:center">
  <img src="./assets/Frequent-Patterns-Mining.png">
 </div>
 
