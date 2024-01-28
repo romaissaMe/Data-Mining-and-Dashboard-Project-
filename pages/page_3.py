@@ -17,6 +17,8 @@ from algorithms import apriori, generate_association_rules, recommandation_item
 dash.register_page(__name__, path='/Frequent_Pattern_Mining',name='Frequent Patterns Mining')
 data= pd.read_csv("./Dataset2.csv")
 transactional_data = pd.read_csv("./dataitems.csv")
+displayed_data = pd.read_csv("./dataitems.csv")
+displayed_data.drop(columns=['Unnamed: 0'], inplace=True)
 transactional_data ['Items'] = transactional_data ['Items'].apply(ast.literal_eval)
 NB_FB = [(2, 1792), (3, 162), (4, 6), (5, 0), (6, 0), (7, 0)]
 
@@ -235,16 +237,24 @@ controls = dbc.Card(
     body=True,
 )
 
-transactional_data_grid = dag.AgGrid(
-    id="transactional-data",
-    columnDefs=[{"field": i} for i in transactional_data.columns],
-    rowData=transactional_data.to_dict("records"),
-    defaultColDef={"minWidth": 120, "sortable": True, "resizable": True, "filter": True},
-    dashGridOptions={"rowSelection":"multiple"},
-    columnSize="sizeToFit",
-    className="ag-theme-balham-dark",
-)
+# transactional_data_grid = dag.AgGrid(
+#     id="transactional-data",
+#     columnDefs=[{"field": i} for i in transactional_data.columns],
+#     rowData=transactional_data.to_dict("records"),
+#     defaultColDef={"minWidth": 120, "sortable": True, "resizable": True, "filter": True},
+#     dashGridOptions={"rowSelection":"multiple"},
+#     columnSize="sizeToFit",
+#     className="ag-theme-balham-dark",
+# )
 
+transactional_data_grid = dbc.Table.from_dataframe(displayed_data,
+                                                   index=True,
+                                                   responsive=True, 
+                                                   striped=True, 
+                                                   bordered=True, 
+                                                   hover=True,
+                                                   id="transactional-data",
+                                                  )
 temperature_input = dbc.Input(
     type="number",
     id="temperature",
@@ -303,8 +313,9 @@ layout= dbc.Container([
     dbc.Row([
         dbc.Col(
             [
-            transactional_data_grid
-            ]
+            html.Div(transactional_data_grid,style={"width": "100%"})
+            ],
+            md=3
         ),
         dbc.Col(
             [

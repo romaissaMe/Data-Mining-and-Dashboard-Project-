@@ -11,7 +11,7 @@
 
 ## Overview
 
-This Data Mining Dashboard application is designed to address the challenges associated with real-world data, focusing on the analysis and extraction of association rules and application of classification and clustering algorithms . The project encompasses two datasets: a static dataset (dataset 1) containing soil property information for soil fertility analysis and a temporal dataset (dataset 2) representing the evolution of COVID-19 cases over time by postal code.
+This Data Mining Dashboard application is designed to address the challenges associated with real-world data, focusing on the analysis and extraction of association rules and application of classification and clustering algorithms. The project encompasses two datasets: a static dataset (dataset 1) containing soil property information for soil fertility analysis and a temporal dataset (dataset 2) representing the evolution of COVID-19 cases over time by postal code.
 
 The application is built using Dash, a Python framework for creating interactive web applications, and it features machine learning algorithms and metrics coded from scratch in Python.
 
@@ -24,7 +24,9 @@ The application is built using Dash, a Python framework for creating interactive
  <img src="./assets/Classification.png">
  <img src="./assets/Clustering.png">
 </div>
-
+ <div class="screens">
+ <img src="./assets/Frequent-Patterns-Mining.png">
+</div>
 
 ### Part 1: Data Exploration and Association Rules Extraction
 
