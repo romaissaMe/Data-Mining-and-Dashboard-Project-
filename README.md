@@ -1,12 +1,14 @@
+<head>
+    <style>
+        .screens {
+            display: flex;
+            flex-direction: row;
+            gap: 2px;
+            margin-top: 1px;
+        }
+    </style>
+</head>
 
-<style>
-    .screens{
-        display:flex;
-        flex-direction:row;
-        gap:2px;
-        margin-top:1px;
-    }
-</style>
 # Data Mining Dashboard Application
 
 ## Overview
