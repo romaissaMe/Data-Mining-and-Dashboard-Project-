@@ -24,28 +24,28 @@ observation = [264,10.3,475,7.49,0.74,10.56,0.45,7.36,1.87,10.63,0.63,1.5136]
 def instanciate_model(algorithme_type,k,distance_type,t_min_samples_split,t_max_depth,min_samples_split,max_depth,nb_trees):
     if algorithme_type=="KNN":
         if k==30 and distance_type =="euclidean":
-            return 'knn_model.pkl'
+            return './models/knn_model.pkl'
         else:
             model= KNN(k,distance_type)
             model.fit(X_train_2, y_train_2)
-            joblib.dump(model, 'knn_model_new.pkl')
-            return 'knn_model_new.pkl'
+            joblib.dump(model, './models/knn_model_new.pkl')
+            return './models/knn_model_new.pkl'
     elif algorithme_type=="DECISON TREE":
         if t_max_depth==50 and t_min_samples_split==30:
-            return 'decision_tree_model.pkl'
+            return './models/decision_tree_model.pkl'
         else:
             model=DecisionTree(t_min_samples_split,t_max_depth)
             model.fit(X_train_1, y_train_1)
-            joblib.dump(model, 'decision_tree_model_new.pkl')
-            return 'decision_tree_model_new.pkl'
+            joblib.dump(model, './models/decision_tree_model_new.pkl')
+            return './models/decision_tree_model_new.pkl'
     elif algorithme_type=="RANDOM FORESTS":
         if max_depth==150 and min_samples_split==35 and nb_trees==10:
-            return 'random_forest_model.pkl'
+            return './models/random_forest_model.pkl'
         else:
             model= RandomForest(min_samples_split=min_samples_split,max_depth=max_depth)
             model.fit(X_train_1, y_train_1)
-            joblib.dump(model, 'random_forest_model_new.pkl')
-            return 'random_forest_model_new.pkl'
+            joblib.dump(model, './models/random_forest_model_new.pkl')
+            return './models/random_forest_model_new.pkl'
 
 def calc_accuracy(y_test, predictions):
     return accuracy(y_test, predictions)
@@ -96,7 +96,7 @@ def train_predict(algorithme_type="DECISON TREE",k=30,distance_type="euclidean",
         ], className=""
     )
 
-def make_prediction(model='decision_tree_model.pkl',observation=[264,10.3,475,7.49,0.74,10.56,0.45,7.36,1.87,10.63,0.63,1.5136]):
+def make_prediction(model='./models/knn_model.pkl',observation=[264,10.3,475,7.49,0.74,10.56,0.45,7.36,1.87,10.63,0.63,1.5136]):
     model = joblib.load(model)
     prediction = model.predict([observation])
     return prediction
@@ -221,7 +221,7 @@ def update_instnance_model(bt1,bt2,bt3,knn_k,distance_type,dt_min_samples_split,
         model,predictions,metrics = train_predict(algorithme_type="KNN")
         fig_1 = confusion_matrix_plot(y_test_2, predictions)
         fig_2 = true_vs_predicted_labels_plot(y_test_2, predictions)
-        return "knn_model.pkl",metrics, fig_1, fig_2
+        return "./models/knn_model.pkl",metrics, fig_1, fig_2
     if callback_context.triggered_id == "rf-train-button":
         model,predictions,metrics = train_predict(algorithme_type="RANDOM FORESTS",min_samples_split=rf_min_samples_split,max_depth=rf__max_depth,nb_trees=n_trees)
     elif callback_context.triggered_id == "knn-train-button":
