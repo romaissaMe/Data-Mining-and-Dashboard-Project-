@@ -3,7 +3,7 @@
 # Data Mining Dashboard Application
 ## Table of Contents
 1. [Overview](#overview)
-2. [Screenshots](#screenshots)
+2. [Dashboard View](#dashboard-view)  
 3. [Part 1: Data Exploration and Association Rules Extraction](#part-1-data-exploration-and-association-rules-extraction)
      - [Static Data Analysis and Visualization](#1-static-data-analysis-and-visualization)
      - [Temporal Data Analysis and Visualization](#2-temporal-data-analysis-and-visualization)
@@ -20,7 +20,7 @@ This Data Mining Dashboard application is designed to address the challenges ass
 
 The application is built using Dash, a Python framework for creating interactive web applications, and it features machine learning algorithms and metrics coded from scratch in Python.
 
-## Screenshots
+## Dashboard View
 <div style="display: flex; flex-direction: row; gap: 2px; margin-top: 1px; ">
  <img src="./assets/Sol-Database.png">
  <img src="./assets/Covid-19-Database.png">
