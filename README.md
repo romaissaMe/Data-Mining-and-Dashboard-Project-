@@ -21,15 +21,19 @@ This Data Mining Dashboard application is designed to address the challenges ass
 The application is built using Dash, a Python framework for creating interactive web applications, and it features machine learning algorithms and metrics coded from scratch in Python.
 
 ## Dashboard View
-<div style="display: flex; flex-direction: row; gap: 2px; margin-top: 1px; ">
+<div style="margin-top: 1px; ">
  <img src="./assets/Sol-Database.png">
+</div>
+<div style="margin-top: 1px; ">
  <img src="./assets/Covid-19-Database.png">
 </div>
-<div style="display: flex; flex-direction: row; gap: 2px; margin-top: 1px;">
+<div style="margin-top: 1px;">
  <img src="./assets/Classification.png">
+</div>
+<div style="margin-top: 1px;">
  <img src="./assets/Clustering.png">
 </div>
- <div style="display: flex; flex-direction: row; gap: 2px; margin-top: 1px; justify-content:center">
+ <div style="margin-top: 1px;">
  <img src="./assets/Frequent-Patterns-Mining.png">
 </div>
 
