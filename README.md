@@ -1,6 +1,18 @@
 
 
 # Data Mining Dashboard Application
+## Table of Contents
+1. [Overview](#overview)
+2. [Screenshots](#screenshots)
+3. [Part 1: Data Exploration and Association Rules Extraction](#part-1-data-exploration-and-association-rules-extraction)
+     - [Static Data Analysis and Visualization](#1-static-data-analysis-and-visualization)
+     - [Temporal Data Analysis and Visualization](#2-temporal-data-analysis-and-visualization)
+     - [Frequent Pattern Mining, Association Rules, and Correlations](#3-frequent-pattern-mining-association-rules-and-correlations)
+
+6. [Part 2: Supervised and Unsupervised Learning](#part-2-supervised-and-unsupervised-learning)
+    - [Supervised Learning](#21-supervised-learning)
+    - [Unsupervised Learning](#22-unsupervised-learning)
+9. [How to Run the Application](#how-to-run-the-application)
 
 ## Overview
 
@@ -23,7 +35,7 @@ The application is built using Dash, a Python framework for creating interactive
 
 ### Part 1: Data Exploration and Association Rules Extraction
 
-#### 1.1 Static Data Analysis and Visualization
+#### 1. Static Data Analysis and Visualization
 1. Import and visualize the dataset before and after preprocessing.  
 2. Provide a global description of the dataset.
 3. Describe each attribute.
@@ -32,7 +44,7 @@ The application is built using Dash, a Python framework for creating interactive
 6. Construct histograms to visualize data distribution.
 7. Build and display scatter plots to deduce correlations between soil properties.
 
-#### 1.2 Temporal Data Analysis and Visualization
+#### 2. Temporal Data Analysis and Visualization
 1. Display the distribution of total confirmed cases and positive tests by area (Tree Map/Bar chart).
 2. Track the evolution of COVID-19 tests, positive tests, and cases over time (weekly, monthly, and yearly) for a selected area (Line chart).
 3. Analyze the distribution of positive COVID-19 cases by area and year (Stacked Bar chart).
@@ -40,7 +52,7 @@ The application is built using Dash, a Python framework for creating interactive
 5. Identify the top 5 areas most impacted by the coronavirus.
 6. Explore the relationship between confirmed cases, tests conducted, and positive tests over time for each area.
 
-#### 2. Frequent Pattern Mining, Association Rules, and Correlations
+#### 3. Frequent Pattern Mining, Association Rules, and Correlations
 1. Discretize continuous climate attribute data (Temperature, Rainfall, Humidity).
 2. Extract frequent patterns and association rules using the Apriori algorithm, experimenting with Min_Supp and Min_Conf values.
 3. Extract strong association rules using correlation measures (lift, confidence, cosine).
