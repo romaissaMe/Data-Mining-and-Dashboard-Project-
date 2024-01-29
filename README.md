@@ -12,7 +12,7 @@
 6. [Part 2: Supervised and Unsupervised Learning](#part-2-supervised-and-unsupervised-learning)
     - [Supervised Learning](#21-supervised-learning)
     - [Unsupervised Learning](#22-unsupervised-learning)
-9. [How to Run the Application](#how-to-run-the-application)
+7. [How to Run the Application](#how-to-run-the-application)
 
 ## Overview
 
